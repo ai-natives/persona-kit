@@ -403,6 +403,19 @@ interface SectionFeedback {
 }
 ```
 
+### 1.7 Outbox Tasks Schema (for reliable async processing)
+```typescript
+interface OutboxTask {
+  taskId: string;                     // UUID
+  taskType: string;                   // e.g., 'process_observation', 'refresh_persona'
+  payload: any;                       // JSONB task-specific data
+  status: 'pending' | 'in_progress' | 'done' | 'failed';
+  runAfter: Date;                     // When to process this task
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
 ## 2. Storage-Specific Schemas
 
 ### 2.1 Knowledge Store - Hot Layer (Key-Value)
@@ -794,6 +807,9 @@ CREATE INDEX idx_feedback_status ON feedback(processingStatus, submittedAt);
 -- Sync Queue
 CREATE INDEX idx_sync_queue_device_status ON sync_queue(deviceId, status);
 CREATE INDEX idx_sync_queue_priority_created ON sync_queue(syncMetadata.priority, syncMetadata.createdAt);
+
+-- Outbox Tasks (for reliable async processing)
+CREATE INDEX idx_outbox_status ON outbox_tasks(status, run_after);
 ```
 
 ## 6. Data Validation Rules
