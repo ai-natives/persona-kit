@@ -3,7 +3,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, DateTime, Integer, text
+from sqlalchemy import JSON, Boolean, DateTime, Integer, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -39,6 +39,14 @@ class Feedback(Base):
         nullable=False,
         default=dict,
         server_default=text("'{}'::jsonb"),
+    )
+    rule_id: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+    mapper_version: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

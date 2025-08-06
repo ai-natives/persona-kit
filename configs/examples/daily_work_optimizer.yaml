@@ -1,0 +1,170 @@
+# Daily Work Optimizer Configuration
+# This mapper optimizes daily work patterns based on energy levels,
+# focus duration, and task switching costs
+
+metadata:
+  id: daily_work_optimizer
+  version: 1.0.0
+  name: "Daily Work Optimizer"
+  description: "Generates personalized work optimization suggestions based on energy patterns and productivity traits"
+  author: "PersonaKit Examples"
+  created: 2024-01-15
+  
+required_traits:
+  - work.energy_patterns
+  - work.focus_duration
+  - work.peak_hours
+  - work.task_switching_cost
+  - current_state.energy_level
+
+trait_mappings:
+  # Maps suggestion types to traits for feedback processing
+  task_recommendation: 
+    - work.energy_patterns
+    - work.focus_duration
+  meeting_recovery:
+    - work.meeting_recovery
+    - work.context_switching
+  break_reminder:
+    - work.break_patterns
+    - work.sustained_attention
+  focus_block:
+    - work.peak_hours
+    - work.focus_duration
+  energy_management:
+    - work.energy_patterns
+    - work.fatigue_signals
+
+rules:
+  # High energy morning => Deep work recommendation
+  - id: morning_high_energy_deep_work
+    conditions:
+      all:
+        - trait_check:
+            path: work.energy_patterns.morning
+            operator: equals
+            value: high
+        - time_check:
+            period: morning
+            timezone: user_local
+    actions:
+      - generate_suggestion:
+          type: task_recommendation
+          template: deep_work_window
+          parameters:
+            duration:
+              from_trait: work.focus_duration.p90
+              default: 90
+            task_type: "complex_creative"
+    weight: 1.0
+    
+  # Low energy => Break recommendation
+  - id: low_energy_break
+    conditions:
+      trait_check:
+        path: current_state.energy_level
+        operator: equals
+        value: low
+    actions:
+      - generate_suggestion:
+          type: break_reminder
+          template: energy_recovery
+          parameters:
+            duration: 15
+            activity: "walk or rest"
+    weight: 1.0
+    
+  # Afternoon slump => Light tasks
+  - id: afternoon_slump_management
+    conditions:
+      all:
+        - time_check:
+            period: afternoon
+            hour_range: [14, 16]
+        - trait_check:
+            path: work.energy_patterns.afternoon
+            operator: equals
+            value: low
+    actions:
+      - generate_suggestion:
+          type: energy_management
+          template: afternoon_adjustment
+          parameters:
+            task_type: "administrative"
+            duration: 30
+    weight: 1.0
+    
+  # Meeting preparation based on context switching cost
+  - id: meeting_prep_high_switch_cost
+    conditions:
+      all:
+        - context_check:
+            field: upcoming_meeting
+            operator: within_minutes
+            value: 30
+        - trait_check:
+            path: work.task_switching_cost
+            operator: equals
+            value: high
+    actions:
+      - generate_suggestion:
+          type: meeting_recovery
+          template: meeting_preparation
+          parameters:
+            prep_time: 15
+            wrap_up_time: 10
+    weight: 1.0
+    
+  # End of day planning
+  - id: daily_review_planning
+    conditions:
+      all:
+        - time_check:
+            period: evening
+            hour_range: [16, 18]
+        - trait_check:
+            path: current_state.energy_level
+            operator: not_equals
+            value: low
+    actions:
+      - generate_suggestion:
+          type: daily_planning
+          template: tomorrow_planning
+          parameters:
+            duration: 15
+    weight: 0.8
+
+templates:
+  deep_work_window:
+    title: "Deep Work Window"
+    description: "Your energy is high. Block the next {duration} minutes for your most challenging {task_type} work."
+    priority: high
+    
+  energy_recovery:
+    title: "Energy Recovery"
+    description: "Low energy detected. Take a {duration}-minute break to {activity}."
+    priority: high
+    
+  afternoon_adjustment:
+    title: "Afternoon Task Adjustment"
+    description: "Switch to {task_type} tasks for the next {duration} minutes to match your afternoon energy pattern."
+    priority: medium
+    
+  meeting_preparation:
+    title: "Meeting Preparation"
+    description: "High task-switching cost detected. Start wrapping up in {prep_time} minutes. Allow {wrap_up_time} minutes after the meeting to refocus."
+    priority: medium
+    
+  tomorrow_planning:
+    title: "Tomorrow Planning"
+    description: "End of day approaching. Spend {duration} minutes reviewing today and planning tomorrow's priorities."
+    priority: low
+
+# Feedback adjustment settings
+feedback_settings:
+  negative_threshold: 5          # Number of negative feedback before adjustment
+  negative_window_days: 7        # Time window for counting negative feedback
+  positive_adjustment: 0.1       # Weight increase for positive feedback (10%)
+  negative_adjustment: -0.2      # Weight decrease for negative threshold (20%)
+  max_weight: 2.0               # Maximum weight multiplier
+  min_weight: 0.5               # Minimum weight multiplier

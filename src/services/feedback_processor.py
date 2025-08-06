@@ -9,8 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.feedback import Feedback
 from ..models.mindscape import Mindscape
+from ..models.mapper_config import MapperConfig, MapperStatus
 from ..repositories.feedback import FeedbackRepository
 from ..repositories.mindscape import MindscapeRepository
+from .config_adjuster import ConfigurationAdjuster
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +35,7 @@ class FeedbackProcessor:
     
     async def process_feedback(self, feedback: Feedback) -> None:
         """Process a single feedback item."""
-        # Get persona to find person_id
+        # Get persona to find person_id and mapper info
         from ..repositories.persona import PersonaRepository
         persona_repo = PersonaRepository(self.session)
         persona = await persona_repo.get(feedback.persona_id)
@@ -41,6 +43,22 @@ class FeedbackProcessor:
         if not persona:
             logger.warning(f"Persona {feedback.persona_id} not found for feedback")
             return
+        
+        # Check if feedback has rule_id (configuration-driven)
+        if feedback.rule_id and persona.mapper_config_id:
+            # Use configuration adjuster for rule-based feedback
+            config_adjuster = ConfigurationAdjuster(self.session)
+            updated = await config_adjuster.process_feedback(
+                feedback=feedback,
+                mapper_config_id=str(persona.mapper_config_id),
+                rule_id=feedback.rule_id
+            )
+            if updated:
+                logger.info(f"Updated mapper configuration based on feedback for rule {feedback.rule_id}")
+            return
+        
+        # Fallback to legacy trait-based processing
+        # (This path will be deprecated once all mappers are configuration-driven)
         
         # Determine if feedback is negative or positive
         is_negative = (
@@ -62,8 +80,15 @@ class FeedbackProcessor:
             logger.warning("No suggestion type in feedback context")
             return
         
-        # Map suggestion types to traits
-        trait_mapping = self._get_trait_mapping(suggestion_type)
+        # Try to get trait mapping from mapper configuration
+        trait_mapping = await self._get_trait_mapping_from_config(
+            persona.mapper_id, suggestion_type
+        )
+        
+        if not trait_mapping:
+            # Fallback to hardcoded mapping
+            trait_mapping = self._get_legacy_trait_mapping(suggestion_type)
+            
         if not trait_mapping:
             logger.warning(f"No trait mapping for suggestion type: {suggestion_type}")
             return
@@ -77,8 +102,26 @@ class FeedbackProcessor:
                 persona.person_id, trait_mapping
             )
     
-    def _get_trait_mapping(self, suggestion_type: str) -> list[str]:
-        """Map suggestion types to trait names."""
+    async def _get_trait_mapping_from_config(
+        self, mapper_id: str, suggestion_type: str
+    ) -> list[str] | None:
+        """Get trait mapping from mapper configuration."""
+        mapper_config = await self.session.execute(
+            select(MapperConfig).where(
+                MapperConfig.config_id == mapper_id,
+                MapperConfig.status == MapperStatus.ACTIVE
+            ).order_by(MapperConfig.version.desc())
+        )
+        mapper = mapper_config.scalar_one_or_none()
+        
+        if mapper and mapper.configuration:
+            trait_mappings = mapper.configuration.get("trait_mappings", {})
+            return trait_mappings.get(suggestion_type)
+        
+        return None
+    
+    def _get_legacy_trait_mapping(self, suggestion_type: str) -> list[str]:
+        """Legacy hardcoded trait mappings (to be deprecated)."""
         mapping = {
             "task_recommendation": ["work.energy_patterns", "work.focus_duration"],
             "meeting_recovery": ["work.meeting_recovery", "work.context_switching"],

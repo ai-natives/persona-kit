@@ -275,7 +275,6 @@ async def test_mock_data_generation(test_db: AsyncSession):
     # Should have various traits from the pattern
     assert len(traits) > 0
     assert any("work." in key for key in traits.keys())
-    assert any("productivity." in key for key in traits.keys())
     
     # Version should match number of updates
     assert mindscape.version >= 5  # At least some updates

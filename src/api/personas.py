@@ -9,9 +9,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
-from ..mappers import DailyWorkOptimizer
 from ..repositories import MindscapeRepository, PersonaRepository
 from ..schemas.persona import PersonaResponse
+from ..services.persona_generator import PersonaGenerator
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -51,23 +51,18 @@ async def generate_persona(
             detail=f"No mindscape found for person {request.person_id}",
         )
 
-    # Initialize mapper based on mapper_id
-    if request.mapper_id == "daily_work_optimizer":
-        mapper = DailyWorkOptimizer()
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unknown mapper: {request.mapper_id}",
-        )
-
     # Add current time to context if not provided
     if "current_time" not in request.context:
         request.context["current_time"] = datetime.now(UTC)
 
+    # Create persona generator
+    generator = PersonaGenerator(db)
+
     try:
-        # Generate persona using mapper
-        persona = mapper.create_persona(
+        # Generate persona using configuration-driven mapper
+        persona = await generator.generate_persona(
             person_id=request.person_id,
+            mapper_id=request.mapper_id,
             mindscape=mindscape,
             context=request.context,
             ttl_hours=request.ttl_hours,
@@ -77,9 +72,12 @@ async def generate_persona(
         saved_persona = await persona_repo.create(
             person_id=persona.person_id,
             mapper_id=persona.mapper_id,
+            mapper_config_id=persona.mapper_config_id,
+            mapper_version=persona.mapper_version,
             core=persona.core,
             overlay=persona.overlay,
             expires_at=persona.expires_at,
+            metadata=persona.metadata,
         )
 
         logger.info(

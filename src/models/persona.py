@@ -30,6 +30,13 @@ class Persona(Base):
         String(100),
         nullable=False,
     )
+    mapper_config_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=True,  # Nullable for backwards compatibility
+    )
+    mapper_version: Mapped[int | None] = mapped_column(
+        nullable=True,  # Nullable for backwards compatibility
+    )
     core: Mapped[dict[str, Any]] = mapped_column(
         JSON,
         nullable=False,
@@ -39,6 +46,12 @@ class Persona(Base):
     overlay: Mapped[dict[str, Any]] = mapped_column(
         JSON,
         nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+    )
+    metadata: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON,
+        nullable=True,
         default=dict,
         server_default=text("'{}'::jsonb"),
     )

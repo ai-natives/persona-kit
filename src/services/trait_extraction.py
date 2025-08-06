@@ -55,7 +55,7 @@ class TraitExtractor:
             if hour is not None:
                 # Track high productivity hours
                 if productivity >= 4:  # 4-5 on scale
-                    traits["productivity.peak_hours"] = {
+                    traits["work.peak_hours"] = {
                         "value": [f"{hour:02d}:00-{(hour+1):02d}:00"],
                         "confidence": 0.7,
                         "sample_size": 1,

@@ -1,0 +1,114 @@
+# Therapy Insights Configuration
+# Example mapper for a therapy application showing how PersonaKit
+# can be used in completely different domains
+
+metadata:
+  id: therapy_insights
+  version: 1.0.0
+  name: "Therapy Insights Generator"
+  description: "Generates therapeutic insights and coping suggestions based on emotional patterns"
+  author: "PersonaKit Examples"
+  created: 2024-01-15
+
+required_traits:
+  - therapy.emotional_patterns
+  - therapy.coping_mechanisms
+  - therapy.trigger_patterns
+  - therapy.progress_indicators
+  - current_state.emotional_state
+
+trait_mappings:
+  progress_recognition:
+    - therapy.progress_indicators
+    - therapy.emotional_patterns
+  coping_suggestion:
+    - therapy.coping_mechanisms
+    - therapy.trigger_patterns
+  insight_reflection:
+    - therapy.session_notes
+    - therapy.emotional_patterns
+  self_care_reminder:
+    - therapy.self_care_practices
+    - current_state.stress_level
+
+rules:
+  # Recognize improvement patterns
+  - id: recognize_emotional_progress
+    conditions:
+      trait_check:
+        path: therapy.emotional_patterns.trend
+        operator: equals
+        value: improving
+    actions:
+      - generate_suggestion:
+          type: progress_recognition
+          template: celebrate_growth
+          parameters:
+            area: "emotional regulation"
+            timeframe:
+              from_trait: therapy.progress_indicators.timeframe
+              default: "this week"
+    weight: 1.0
+
+  # Suggest coping mechanism when stress detected
+  - id: stress_coping_suggestion
+    conditions:
+      all:
+        - trait_check:
+            path: current_state.emotional_state
+            operator: equals
+            value: stressed
+        - trait_check:
+            path: therapy.coping_mechanisms.effective
+            operator: exists
+            value: true
+    actions:
+      - generate_suggestion:
+          type: coping_suggestion
+          template: apply_coping_strategy
+          parameters:
+            strategy:
+              from_trait: therapy.coping_mechanisms.most_effective
+              default: "breathing exercises"
+    weight: 1.0
+
+  # Pattern recognition insight
+  - id: trigger_pattern_insight
+    conditions:
+      trait_check:
+        path: therapy.trigger_patterns.recurring
+        operator: exists
+        value: true
+    actions:
+      - generate_suggestion:
+          type: insight_reflection
+          template: pattern_awareness
+          parameters:
+            pattern:
+              from_trait: therapy.trigger_patterns.most_recent
+              default: "situational trigger"
+    weight: 0.9
+
+templates:
+  celebrate_growth:
+    title: "Recognize Your Progress"
+    description: "Your {area} has shown improvement {timeframe}. Take a moment to acknowledge this growth."
+    priority: high
+    
+  apply_coping_strategy:
+    title: "Coping Strategy Reminder"
+    description: "You seem stressed. Remember that {strategy} has worked well for you in the past."
+    priority: high
+    
+  pattern_awareness:
+    title: "Pattern Insight"
+    description: "Notice how {pattern} has appeared again. Awareness is the first step to change."
+    priority: medium
+
+feedback_settings:
+  negative_threshold: 3          # Lower threshold for therapy context
+  negative_window_days: 14       # Longer window for pattern detection
+  positive_adjustment: 0.15      # Larger positive reinforcement
+  negative_adjustment: -0.1      # Gentler negative adjustment
+  max_weight: 1.5               # More conservative max
+  min_weight: 0.7               # Higher floor to maintain some presence
