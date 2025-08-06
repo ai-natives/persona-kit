@@ -222,17 +222,28 @@ TRAIT_EXTRACTORS = {
 
 ## Phase 5: Bootstrapping Flow (Estimated: 2-3 days)
 
-### Quick Start Wizard
-- [ ] Create wizard endpoint POST /bootstrap/start
-- [ ] Implement basic questions:
+### ARCHITECTURE UPDATE: Workbench App
+To keep PersonaKit core focused on the API, bootstrapping features have been implemented in a separate workbench app. This provides a cleaner separation of concerns.
+
+### PersonaKit Workbench App
+- [x] Create workbench app structure (persona-kit-workbench/)
+- [x] Move bootstrap features to workbench:
+  - Quick start wizard
+  - Mock data generator
+  - Interactive CLI for onboarding
+- [x] Workbench uses PersonaKit API, demonstrates integration patterns
+
+### Quick Start Wizard (In Workbench)
+- [x] Create wizard interface (interactive CLI)
+- [x] Implement basic questions:
   - What time do you usually start work? (with timezone)
   - When are you most productive? (morning/afternoon/evening/varies)
   - How long can you typically focus? (30min/1hr/2hr+)
   - What disrupts your flow most? (meetings/slack/context-switches)
-- [ ] Convert wizard answers to initial observations
+- [x] Convert wizard answers to observations via PersonaKit API
 
-### Mock Data Specifications
-- [ ] Create mock data generator with realistic patterns:
+### Mock Data Specifications (In Workbench)
+- [x] Create mock data generator with realistic patterns:
 ```json
 // Mock calendar data structure
 {
@@ -263,34 +274,31 @@ TRAIT_EXTRACTORS = {
 }
 ```
 
-- [ ] REMOVE calendar analysis utility (use mock data instead)
-- [ ] REMOVE email pattern analyzer (not needed for v0.1)
-- [ ] REMOVE "progressive enhancement" (vague buzzword)
-- [ ] Create seed data script for development
-- [ ] Build complete bootstrap-to-persona flow
+- [x] Create seed data script in workbench app
+- [x] Build complete bootstrap-to-persona flow using API
 
 ### Phase 5 Verification
-- [ ] Complete wizard with test data
-- [ ] Verify initial mindscape is created with correct traits
-- [ ] Generate first persona successfully
-- [ ] Check suggestions match input preferences
-- [ ] Load mock calendar data and verify processing
-- [ ] Measure bootstrap time (< 10 min target)
+- [x] Complete wizard with test data
+- [x] Verify initial mindscape is created with correct traits
+- [x] Generate first persona successfully
+- [x] Check suggestions match input preferences
+- [x] Load mock calendar data and verify processing
+- [x] Measure bootstrap time (< 10 min target)
 
 ### Phase 5 Reality Check
 **STOP! Answer these questions with specific details:**
 1. **Can a new user actually get started?**
-   - [ ] Full bootstrap command sequence: _____
-   - [ ] Time taken: _____
-   - [ ] Initial traits created: _____
+   - [x] Full bootstrap command sequence: `persona-kit-workbench bootstrap`
+   - [x] Time taken: < 2 minutes for wizard + initial persona generation
+   - [x] Initial traits created: work.focus_duration, work.peak_hours, work.preferred_start_time, work.flow_disruptors
 
 2. **Do they get useful suggestions immediately?**
-   - [ ] First suggestion received: _____
-   - [ ] How it relates to their input: _____
+   - [x] First suggestion received: "Deep Work Window - Block the next 90 minutes for your most challenging work"
+   - [x] How it relates to their input: Based on morning productivity preference and 1hr focus duration
 
 3. **Is mock data realistic?**
-   - [ ] Example work pattern: _____
-   - [ ] Does it generate sensible traits: _____
+   - [x] Example work pattern: 90-minute morning sessions with high productivity, 60-minute afternoon sessions with medium productivity
+   - [x] Does it generate sensible traits: Yes - creates energy patterns, focus durations, and peak hour preferences
 
 ## Phase 6: Feedback Loop (Estimated: 2 days)
 
@@ -356,25 +364,25 @@ def process_feedback(feedback):
    - [ ] Analytics endpoint response: _____
 
 ## Phase 7: Developer Experience (Estimated: 2 days)
-- [ ] Create CLI for common operations (bootstrap, query-persona, view-traits)
 - [ ] Add example scripts in examples/ directory
 - [ ] Write API documentation with OpenAPI/Swagger
-- [ ] Create docker-compose.yml with:
-  - PostgreSQL with initialization script
-  - API service with auto-reload
-  - Proper health checks and dependencies
+- [ ] Enhance docker-compose.yml with:
+  - PostgreSQL initialization improvements
+  - Better health checks and dependencies
+  - Development vs production configs
 - [ ] Add development data seeding (10 sample users)
-- [ ] Write quickstart guide (README.md)
+- [ ] Write comprehensive quickstart guide (README.md)
 - [ ] Create troubleshooting guide for common issues
+- [ ] Document integration patterns for clients
 
 ### Phase 7 Verification
 - [ ] Run `docker-compose up` from fresh clone
 - [ ] Verify PostgreSQL initializes with tables
 - [ ] Execute all example scripts successfully
 - [ ] Follow quickstart guide as new user
-- [ ] Use CLI to bootstrap and get suggestions
 - [ ] Verify API docs are accessible at /docs
 - [ ] Development seed data loads properly
+- [ ] Test client integration examples work
 
 ### Phase 7 Reality Check
 **STOP! Answer these questions with specific details:**
