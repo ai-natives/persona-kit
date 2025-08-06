@@ -168,9 +168,9 @@ If you're unsure about anything:
 
 ## CONTEXT CHECKPOINT (Update this as you work)
 
-**Last Updated:** 2025-08-06 15:50 JST
-**Current Phase:** Phase 2 - Core Data Models (COMPLETE)
-**Current Task:** Phase 2 Complete, ready for Phase 3
+**Last Updated:** 2025-08-06 15:57 JST
+**Current Phase:** Phase 3 - Observation Processing Pipeline (Ready to Start)
+**Current Task:** Implement AsyncIO background worker with FOR UPDATE SKIP LOCKED
 **Completed Phases:** Phase 1 (Foundation Setup), Phase 2 (Core Data Models)
 
 **Key Decisions Made:**
@@ -253,6 +253,15 @@ If you're unsure about anything:
 - Mindscape upsert uses ON CONFLICT for atomic updates
 - Feedback repository includes advanced statistics methods
 - Test suite now uses testcontainers for proper isolation
+- Added outbox_tasks columns: attempts, last_error, completed_at via migration
+
+### Phase 3 Planning Decisions:
+- Use AsyncIO background task (not separate process) for simplicity
+- Use FOR UPDATE SKIP LOCKED for queue processing (PostgreSQL native)
+- Process observations immediately, not daily summaries
+- Simple trait schema with confidence scores and sample sizes
+- Basic validation only (schema + timestamp checks)
+- Skip duplicate detection for v0.1
 
 ---
 

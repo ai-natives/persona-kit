@@ -1,0 +1,49 @@
+{
+  "person_id": "550e8400-e29b-41d4-a716-446655440001",
+  "name": "Morning Person Test Profile",
+  "observations": [
+    {
+      "type": "work_session",
+      "content": {
+        "start_time": "09:00",
+        "end_time": "11:00",
+        "productivity_score": 9,
+        "energy_level": "high",
+        "tasks_completed": 5,
+        "focus_rating": 10
+      }
+    },
+    {
+      "type": "work_session",
+      "content": {
+        "start_time": "14:00",
+        "end_time": "15:30",
+        "productivity_score": 6,
+        "energy_level": "medium",
+        "tasks_completed": 2,
+        "focus_rating": 6
+      }
+    },
+    {
+      "type": "user_input",
+      "content": {
+        "feedback": "I feel most productive in the morning hours",
+        "preferred_work_time": "09:00-11:00"
+      }
+    }
+  ],
+  "expected_traits": {
+    "work.energy_patterns": {
+      "high_energy_slots": ["09:00-11:00"],
+      "low_energy_slots": ["14:00-16:00"],
+      "sample_size": 2
+    },
+    "work.peak_hours": {
+      "primary": {
+        "start": "09:00",
+        "end": "11:00",
+        "confidence": 0.9
+      }
+    }
+  }
+}

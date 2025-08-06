@@ -410,7 +410,10 @@ interface OutboxTask {
   taskType: string;                   // e.g., 'process_observation', 'refresh_persona'
   payload: any;                       // JSONB task-specific data
   status: 'pending' | 'in_progress' | 'done' | 'failed';
+  attempts: number;                   // Retry attempt count
+  lastError?: string;                 // Last error message if failed
   runAfter: Date;                     // When to process this task
+  completedAt?: Date;                 // When task was completed
   createdAt: Date;
   updatedAt: Date;
 }

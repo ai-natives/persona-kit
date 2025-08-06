@@ -71,15 +71,16 @@ Build a minimal PersonaKit that helps individual knowledge workers optimize thei
    - [ ] Error response format: _____
 
 ## Phase 2: Core Data Models (Estimated: 2 days)
-- [ ] Implement Observation model and database table
-- [ ] Implement Mindscape model with JSONB traits storage
-- [ ] Implement Persona model with TTL support (expires_at field)
-- [ ] Implement Feedback model
-- [ ] Create Pydantic schemas for API requests/responses
-- [ ] Add database repository classes with basic CRUD
-- [ ] Write unit tests for models and repositories
-- [ ] Add data retention policy (observations older than 90 days)
-- [ ] Create specific database indexes:
+- [x] Implement Observation model and database table
+- [x] Implement Mindscape model with JSONB traits storage
+- [x] Implement Persona model with TTL support (expires_at field)
+- [x] Implement Feedback model
+- [x] Create Pydantic schemas for API requests/responses
+- [x] Add database repository classes with basic CRUD
+- [x] Write unit tests for models and repositories
+- [x] Add data retention policy (observations older than 90 days)
+- [x] Add migration for outbox_tasks columns: attempts, last_error, completed_at
+- [x] Create specific database indexes:
   ```sql
   CREATE INDEX idx_observations_person_created ON observations(person_id, created_at DESC);
   CREATE INDEX idx_mindscapes_person ON mindscapes(person_id);
@@ -113,6 +114,7 @@ Build a minimal PersonaKit that helps individual knowledge workers optimize thei
 
 ### Observation Types & Data Flow
 - [ ] Define observation types enum: `work_session`, `user_input`, `calendar_event`
+- [ ] Implement AsyncIO background worker in FastAPI lifespan with FOR UPDATE SKIP LOCKED
 - [ ] Create outbox_tasks table for reliable async processing:
   ```sql
   CREATE TABLE outbox_tasks (
@@ -120,7 +122,10 @@ Build a minimal PersonaKit that helps individual knowledge workers optimize thei
     task_type  TEXT NOT NULL,  -- 'process_observation'
     payload    JSONB NOT NULL,
     status     TEXT DEFAULT 'pending',  -- pending|in_progress|done|failed
+    attempts   INT DEFAULT 0,
+    last_error TEXT,
     run_after  TIMESTAMP DEFAULT NOW(),
+    completed_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
   );
@@ -164,6 +169,7 @@ TRAIT_EXTRACTORS = {
 - [ ] Submit test observations via API with mock data
 - [ ] Verify observation queued in outbox_tasks table
 - [ ] Run background worker and confirm task processing
+- [ ] Spawn two worker instances; ensure each outbox_tasks row is processed exactly once
 - [ ] Verify specific traits are extracted (list which ones)
 - [ ] Run full observation → mindscape flow
 - [ ] Verify async processing completes within 500ms
