@@ -1,14 +1,23 @@
 # PersonaKit Explorer - Work Plan
 
+## v0.1.1 Update: Narrative Support
+PersonaKit v0.1.1 adds human narratives (self-observations and curations) with semantic search. The Explorer needs to support:
+- Browsing and searching narratives
+- Creating self-observations and curations through the UI
+- Visualizing narrative → trait relationships
+- Debugging narrative-enhanced persona generation
+- Analyzing narrative influence on personas
+
 ## Goal
 Build a comprehensive web-based explorer that enables developers, operators, and data scientists to explore PersonaKit's data structures, experiment with persona generation, and debug system behavior through visual interfaces.
 
 ## Key Outcomes
-- Visual exploration interface for mindscapes, traits, and observations
-- Interactive persona laboratory with context simulation
+- Visual exploration interface for mindscapes, traits, observations, and narratives
+- Interactive persona laboratory with context simulation and narrative influence
 - Agent framework integration templates for LangChain, AutoGen, and CrewAI
-- Real-time system monitoring and analytics dashboard
-- Developer debugging tools with performance profiling
+- Real-time system monitoring and analytics dashboard with narrative insights
+- Developer debugging tools with performance profiling and semantic search
+- Narrative management interface for self-observations and curations
 
 ## Success Criteria
 - [ ] Can browse any mindscape and understand trait relationships visually
@@ -17,6 +26,9 @@ Build a comprehensive web-based explorer that enables developers, operators, and
 - [ ] System bottlenecks and errors are immediately visible
 - [ ] Works with both mock data and real PersonaKit API
 - [ ] Loads initial view in < 2 seconds
+- [ ] **v0.1.1**: Can search narratives semantically and see their influence on personas
+- [ ] **v0.1.1**: Can add self-observations and curations through the UI
+- [ ] **v0.1.1**: Can debug narrative-enhanced rule conditions
 
 ## Related Documentation
 - **Design Document**: @docs/persona-kit-explorer-design.md
@@ -99,13 +111,17 @@ Build a comprehensive web-based explorer that enables developers, operators, and
    - [x] Timeline shows 4 data points from Jan 1-15
    - [x] LangChain export includes actual persona data
 
-## Phase 3: Real API Integration (Estimated: 3 days)
+## Phase 3: Real API Integration with Narratives
 - [ ] Add environment configuration (VITE_API_MODE=mock|real)
 - [ ] Create real PersonaKit API client with proper error handling
 - [ ] Implement API/mock toggle in UI header
 - [ ] Add authentication support if required by API
 - [ ] Create person selector for multi-profile support
 - [ ] Handle loading states with skeletons/spinners
+- [ ] **v0.1.1: Add narrative API endpoints**
+  - [ ] Implement `/narratives/self-observation` client
+  - [ ] Implement `/narratives/curate` client
+  - [ ] Implement `/narratives/search` client with semantic query support
 
 ### Phase 3 Verification
 - [ ] **Test with real PersonaKit API**
@@ -135,13 +151,20 @@ Build a comprehensive web-based explorer that enables developers, operators, and
    - [ ] Network requests go to: _____
    - [ ] Response times: _____
 
-## Phase 4: Observation Management (Estimated: 2 days)
+## Phase 4: Observation & Narrative Management
 - [ ] Create observation creation form with type selector
 - [ ] Implement observation timeline with filtering
 - [ ] Build bulk import for CSV/JSON files
 - [ ] Add observation edit/delete functionality
 - [ ] Show real-time trait recalculation preview
 - [ ] Create observation templates for common patterns
+- [ ] **v0.1.1: Add Narratives Tab**
+  - [ ] Create narrative browser with timeline view
+  - [ ] Add self-observation input form with rich text editor
+  - [ ] Build curation interface for refining traits
+  - [ ] Show narrative → trait extraction links
+  - [ ] Implement semantic search interface
+  - [ ] Display embedding similarity scores
 
 ### Phase 4 Verification
 - [ ] **Test observation CRUD**
@@ -155,6 +178,11 @@ Build a comprehensive web-based explorer that enables developers, operators, and
   - [ ] Create observation
   - [ ] Verify mindscape version increments
   - [ ] See trait changes highlighted
+- [ ] **v0.1.1: Test narrative features**
+  - [ ] Add self-observation and see it appear in timeline
+  - [ ] Create curation to refine a trait
+  - [ ] Search narratives with semantic query
+  - [ ] Verify trait-narrative links display correctly
 
 ### Phase 4 Reality Check (MANDATORY BEFORE MARKING COMPLETE)
 **STOP! Answer these questions with specific details:**
@@ -167,17 +195,30 @@ Build a comprehensive web-based explorer that enables developers, operators, and
    - [ ] "Imported file: _____"
    - [ ] "Number of records: _____"
 
-3. **Show your work:**
+3. **v0.1.1: Did narratives work?**
+   - [ ] "Self-observation added: _____"
+   - [ ] "Semantic search query: _____"
+   - [ ] "Similar narratives found: _____"
+
+4. **Show your work:**
    - [ ] New mindscape version: _____
    - [ ] Trait value before/after: _____
+   - [ ] Narrative → trait link example: _____
 
-## Phase 5: Analytics Dashboard (Estimated: 3 days)
+## Phase 5: Analytics Dashboard with Narrative Insights
 - [ ] Create trait coverage heatmap component
 - [ ] Build observation frequency chart (daily/weekly)
 - [ ] Implement mapper success rate metrics
 - [ ] Add system performance gauges (queue depth, processing time)
 - [ ] Create error log viewer with filtering
 - [ ] Build correlation matrix for trait relationships
+- [ ] **v0.1.1: Add Narrative Analytics**
+  - [ ] Create narrative frequency timeline
+  - [ ] Build semantic cluster visualization
+  - [ ] Show narrative → persona influence metrics
+  - [ ] Display embedding similarity heatmap
+  - [ ] Track curation activity over time
+  - [ ] Analyze narrative sentiment patterns
 
 ### Phase 5 Verification
 - [ ] **Test visualizations with data**
@@ -190,6 +231,10 @@ Build a comprehensive web-based explorer that enables developers, operators, and
 - [ ] **Check dashboard performance**
   - [ ] All charts render < 1 second
   - [ ] No lag with 1000+ data points
+- [ ] **v0.1.1: Verify narrative analytics**
+  - [ ] Semantic clusters group similar narratives
+  - [ ] Influence metrics show which narratives affect personas
+  - [ ] Embedding similarity makes sense for related content
 
 ### Phase 5 Reality Check (MANDATORY BEFORE MARKING COMPLETE)
 **STOP! Answer these questions with specific details:**
@@ -206,13 +251,20 @@ Build a comprehensive web-based explorer that enables developers, operators, and
    - [ ] Screenshot of dashboard: _____
    - [ ] Key insight discovered: _____
 
-## Phase 6: Developer Tools (Estimated: 3 days)
+## Phase 6: Developer Tools with Narrative Support
 - [ ] Create API request builder with method/endpoint selector
 - [ ] Implement response inspector with JSON highlighting
 - [ ] Build mapper development kit with live preview
 - [ ] Add trait calculation step-through debugger
 - [ ] Create performance profiler for slow operations
 - [ ] Implement scenario recorder/player for testing
+- [ ] **v0.1.1: Add Narrative Development Tools**
+  - [ ] Create narrative → trait extraction debugger
+  - [ ] Build embedding visualization tool
+  - [ ] Add semantic search query builder
+  - [ ] Implement narrative rule condition tester
+  - [ ] Create mapper configuration with narrative_check support
+  - [ ] Build narrative performance profiler (embedding time, search latency)
 
 ### Phase 6 Verification
 - [ ] **Test API request builder**
@@ -227,6 +279,11 @@ Build a comprehensive web-based explorer that enables developers, operators, and
   - [ ] Profile persona generation
   - [ ] Identify slowest operation
   - [ ] Export performance report
+- [ ] **v0.1.1: Test narrative tools**
+  - [ ] Debug narrative → trait extraction flow
+  - [ ] Test semantic search with different queries
+  - [ ] Create mapper with narrative_check conditions
+  - [ ] Profile embedding generation time
 
 ### Phase 6 Reality Check (MANDATORY BEFORE MARKING COMPLETE)
 **STOP! Answer these questions with specific details:**
@@ -243,7 +300,7 @@ Build a comprehensive web-based explorer that enables developers, operators, and
    - [ ] Slowest operation found: _____
    - [ ] Time taken: _____
 
-## Phase 7: Advanced Features (Estimated: 2 days)
+## Phase 7: Advanced Features
 - [ ] Implement side-by-side persona comparison
 - [ ] Create trait correlation matrix visualization
 - [ ] Build feedback simulation with impact preview
@@ -279,7 +336,7 @@ Build a comprehensive web-based explorer that enables developers, operators, and
    - [ ] Strong correlation example: _____
    - [ ] Export file location: _____
 
-## Phase 8: Polish & Production Readiness (Estimated: 2 days)
+## Phase 8: Polish & Production Readiness
 - [ ] Add comprehensive error boundaries
 - [ ] Implement keyboard shortcuts for common actions
 - [ ] Create contextual help system with tooltips
@@ -324,12 +381,10 @@ Build a comprehensive web-based explorer that enables developers, operators, and
 5. **Performance Conscious**: Fast load times and smooth interactions
 
 ## Timeline Summary
-- **Phase 1-2**: Foundation & Features (COMPLETE - 2 days)
-- **Phase 3**: Real API Integration (3 days)
-- **Phase 4**: Observation Management (2 days)
-- **Phase 5**: Analytics Dashboard (3 days)
-- **Phase 6**: Developer Tools (3 days)
-- **Phase 7**: Advanced Features (2 days)
-- **Phase 8**: Polish & Production (2 days)
-
-**Total Estimated Time**: 17 days (2 complete + 15 remaining)
+- **Phase 1-2**: Foundation & Features (COMPLETE)
+- **Phase 3**: Real API Integration with Narratives
+- **Phase 4**: Observation & Narrative Management
+- **Phase 5**: Analytics Dashboard with Narrative Insights
+- **Phase 6**: Developer Tools
+- **Phase 7**: Advanced Features
+- **Phase 8**: Polish & Production

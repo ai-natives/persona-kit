@@ -134,7 +134,7 @@
 - Start with action verb: "Create", "Extract", "Define", "Write", "Update"
 - Have clear deliverable: file, function, section, diagram
 - Are independently verifiable
-- Take 5-30 minutes to complete
+- Are atomic and focused
 
 ### Bad Tasks:
 - Too vague: "Improve the system"
@@ -255,8 +255,7 @@
 
 1. **Customize phases** based on project type and size
 2. **Add more phases** for larger projects (typically 4-8 phases total)
-3. **Time estimates** can be added to tasks if helpful
-4. **Dependencies** between phases should be explicit
+3. **Dependencies** between phases should be explicit
 
 ## Quality Review Process
 

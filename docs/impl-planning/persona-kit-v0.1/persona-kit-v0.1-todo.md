@@ -512,83 +512,8 @@ persona-kit-examples/             # Separate repo
    - [ ] Do rule weights adjust automatically? _____
    - [ ] Can you see configuration version history? _____
 
-## Phase 7: Developer Experience
-- [ ] Add example scripts in examples/ directory
-- [ ] Write API documentation with OpenAPI/Swagger
-- [ ] Enhance docker-compose.yml with:
-  - PostgreSQL initialization improvements
-  - Better health checks and dependencies
-  - Development vs production configs
-- [ ] Add development data seeding (10 sample users)
-- [ ] Write comprehensive quickstart guide (README.md)
-- [ ] Create troubleshooting guide for common issues
-- [ ] Document integration patterns for clients
-
-### Phase 7 Verification
-- [ ] Run `docker-compose up` from fresh clone
-- [ ] Verify PostgreSQL initializes with tables
-- [ ] Execute all example scripts successfully
-- [ ] Follow quickstart guide as new user
-- [ ] Verify API docs are accessible at /docs
-- [ ] Development seed data loads properly
-- [ ] Test client integration examples work
-
-### Phase 7 Reality Check
-**STOP! Answer these questions with specific details:**
-1. **Can someone else actually use this?**
-   - [ ] Fresh setup commands: _____
-   - [ ] Time to first suggestion: _____
-   - [ ] Errors encountered: _____
-
-2. **Is PostgreSQL setup actually simple?**
-   - [ ] Init script location: _____
-   - [ ] How migrations run: _____
-
-3. **Is it actually developer-friendly?**
-   - [ ] Example modification made: _____
-   - [ ] Hot reload working: _____
-
-## Phase 8: Testing & Polish
-- [ ] Achieve 80% test coverage (focus on critical paths)
-- [ ] Add performance benchmarks:
-  - Observation processing: < 500ms
-  - Persona generation: < 2s with 1000 observations
-  - API response time: < 200ms
-- [ ] Fix all type checking issues
-- [ ] Resolve all linting warnings
-- [ ] Add comprehensive error handling:
-  - Database connection failures
-  - Invalid observation data
-  - Persona generation failures
-  - Rate limiting exceeded
-- [ ] Create integration test suite
-- [ ] Add API endpoint monitoring
-- [ ] Document design decisions in ARCHITECTURE.md
-
-### Phase 8 Verification
-- [ ] Run coverage report and verify 80%+
-- [ ] Run performance benchmarks against targets
-- [ ] Zero mypy errors
-- [ ] Zero ruff warnings
-- [ ] All integration tests pass
-- [ ] Test each error scenario manually
-- [ ] Load test with 10k observations
-
-### Phase 8 Reality Check
-**STOP! Answer these questions with specific details:**
-1. **Is it actually production-ready?**
-   - [ ] Coverage percentage: _____
-   - [ ] Performance metrics (all 3): _____
-   - [ ] Error rate under load: _____
-
-2. **Have you tested failure cases?**
-   - [ ] Database down behavior: _____
-   - [ ] Invalid data response: _____
-   - [ ] User experience when it fails: _____
-
-3. **Is it maintainable?**
-   - [ ] Can another dev understand the code: _____
-   - [ ] Are design decisions documented: _____
+## Phase 7-8: Deferred to v0.1.1
+Developer experience and comprehensive testing deferred to allow focus on narrative enhancements in v0.1.1.
 
 ## Key Principles
 1. **Start Simple**: Get basic flow working before adding features
@@ -605,8 +530,7 @@ persona-kit-examples/             # Separate repo
 - **Phase 5**: Bootstrapping Flow
 - **Phase 6**: Feedback Loop
 - **Phase 6.5**: Architectural Separation ⚠️ **CRITICAL**
-- **Phase 7**: Developer Experience
-- **Phase 8**: Testing & Polish
+- **Phase 7-8**: Deferred to v0.1.1
 
 ## Explicitly NOT in v0.1 (per review)
 - Task context in persona cache key (single mapper = no collision)
@@ -615,14 +539,11 @@ persona-kit-examples/             # Separate repo
 - Confidence-based feedback algorithm (using threshold approach instead)
 
 ## Definition of Done
-- [ ] All phases complete with verifications passing
-- [ ] **Phase 6.5 architectural separation complete** (PersonaKit core is domain-agnostic)
-- [ ] Documentation is comprehensive and accurate
-- [ ] System runs with single command
-- [ ] Code is clean and maintainable
-- [ ] Performance targets met
-- [ ] 80% test coverage achieved
-- [ ] API is stable and ready for integration
+- [x] Phase 1-6.5 complete with verifications passing
+- [x] **Phase 6.5 architectural separation complete** (PersonaKit core is domain-agnostic)
+- [x] System runs with single command
+- [x] API is stable and ready for integration
+- [ ] Phase 7-8 deferred to v0.1.1
 
 ## Note on v0.2 Direction
 v0.2 will focus on integrating PersonaKit with other applications (e.g., SQL Coach) rather than extensive user testing. Keep v0.1 focused on a solid API foundation that external apps can consume.
