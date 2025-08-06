@@ -21,11 +21,13 @@
 
 ### The Persona Mapper's True Role
 
-The Persona Mapper is not just a "query engine" - it's a **task-aware pruning algorithm** that understands:
-- What information is relevant for this specific task
-- What level of detail is appropriate
-- What contextual factors matter right now
-- What can be safely ignored
+The Persona Mapper is a **configuration-driven, task-aware selection system** that:
+- Evaluates declarative rules to determine what information is relevant
+- Applies weighted conditions based on feedback-adjusted configurations
+- Generates suggestions using template-based actions
+- Evolves automatically as rule weights are adjusted by user feedback
+
+Mappers are YAML/JSON configurations, not code, allowing domain experts to create and modify them without programming.
 
 ## Use Case Analysis
 

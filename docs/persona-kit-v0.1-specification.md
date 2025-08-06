@@ -14,22 +14,28 @@ PersonaKit v0.1 is a focused MVP implementation of the Work Assistant use case, 
 
 ## v0.1 Architecture
 
-PersonaKit v0.1 is split into two components:
+PersonaKit v0.1 is designed as a persona generation service with configuration-driven mappers:
 
-1. **PersonaKit Core (API)** - The persona engine
+1. **PersonaKit Service (API)** - The persona generation service
    - REST API for observations, mindscapes, personas
    - Background processing of observations
-   - Trait extraction and mindscape management
-   - Persona generation via mappers
+   - Rule engine for evaluating mapper configurations
+   - Configuration management and versioning
+   - Automatic weight adjustment from feedback
    - Minimal CLI for API interaction (e.g., `persona-kit suggest`)
 
-2. **PersonaKit Companion** - User-facing features
+2. **PersonaKit Workbench** - Developer tools
    - Bootstrap wizard for new users
    - Mock data generator for testing
-   - Example integrations
-   - Onboarding flows
+   - Example mapper configurations
+   - Configuration testing tools
 
-This separation keeps the core focused on being a robust API that other applications can integrate with.
+3. **Mapper Configurations** - Domain logic as YAML/JSON
+   - Not code - declarative rule definitions
+   - Uploaded via API, not compiled in
+   - Automatically versioned and adjusted by feedback
+
+This architecture makes PersonaKit a domain-agnostic service that any application can use via API calls.
 
 ## v0.1 Scope
 
@@ -50,29 +56,37 @@ This separation keeps the core focused on being a robust API that other applicat
   - Simple pattern recognition from work artifacts
   - Incremental mindscape updates
 
-#### 2. Single Mapper: Daily Work Optimizer
-```typescript
-{
-  mapperId: "daily-work-optimizer-v1",
-  name: "Daily Work Optimizer",
-  
-  taskContext: {
-    description: "Optimize daily work patterns and productivity",
-    timeHorizon: "today",
-    adaptiveTo: ["energy", "calendar", "priorities"]
-  },
-  
-  mustIncludeTraits: [
-    "work.energy_patterns",
-    "work.focus_duration", 
-    "work.task_switching_cost",
-    "work.meeting_recovery_time",
-    "current_state.energy_level",
-    "current_state.stress_indicators",
-    "current_state.priority_stack",
-    "productivity.peak_hours"
-  ]
-}
+#### 2. Example Mapper Configuration: Daily Work Optimizer
+```yaml
+metadata:
+  id: daily-work-optimizer-v1
+  name: "Daily Work Optimizer"
+  description: "Optimize daily work patterns and productivity"
+  version: 1.0
+
+required_traits:
+  - work.energy_patterns
+  - work.focus_duration
+  - work.task_switching_cost
+  - productivity.peak_hours
+
+rules:
+  - id: high_energy_deep_work
+    conditions:
+      all:
+        - trait: work.energy_patterns.current
+          equals: high
+    actions:
+      - generate_suggestion:
+          type: task_recommendation
+          template: deep_work_window
+    weight: 1.0  # Adjustable by feedback
+
+templates:
+  deep_work_window:
+    title: "Deep Work Window"
+    description: "Your energy is high - ideal for challenging tasks"
+    duration: "{work.focus_duration.p90}"
 ```
 
 #### 3. Minimal Bootstrapping System

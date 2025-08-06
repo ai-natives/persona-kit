@@ -1,6 +1,6 @@
 ## **1. Core Mission & Philosophy**
 
-**PersonaKit** is a framework for enabling AI systems to deeply understand and model specific human individuals for complex collaborative and coaching workflows.
+**PersonaKit** is a service for enabling AI systems to deeply understand and model specific human individuals for complex collaborative and coaching workflows.
 
 Its purpose is to move beyond generic roles and model an individual’s unique preferences, communication style, motivations, and work patterns. This allows AI and human collaborators to interact with greater effectiveness, precision, and empathy.
 
@@ -10,7 +10,7 @@ The system is built on a strict separation of concerns between key entities:
 
 * **Observations:** The raw data layer. This includes all ingested source material, whether stored directly or as pointers to external data.  
 * **Mindscape (The Terrain):** A private, comprehensive database of derived traits and vector embeddings, synthesized from user-approved **Observations**. The data within is tagged by volatility to support efficient retrieval.  
-* **Persona Mapper (The Cartographer):** A reusable, versioned, and trainable definition of *how to create a Persona*. It embodies the skill and knowledge of how to map the Mindscape for a specific purpose.  
+* **Persona Mapper (The Cartographer):** A configuration-driven, versioned definition of *how to create a Persona*. It consists of declarative rules in YAML/JSON that define conditions and actions for mapping the Mindscape to a specific purpose. These configurations can be automatically adjusted based on feedback.  
 * **Persona (The Map):** A durable, context-specific reference model of an individual. It is composed of two parts to balance performance and freshness:  
   * **Persona Core:** A pre-computed, cached foundation containing low-volatility, foundational traits (e.g., core beliefs, communication style). This is the system's "materialized view."  
   * **Contextual Overlay:** A lightweight, dynamically-fetched layer containing high-volatility, just-in-time information (e.g., current availability, recent sentiment).  
@@ -41,14 +41,14 @@ The framework operates in a continuous cycle of data ingestion, analysis, and sy
      * The system performs a fast, dynamic query to fetch the **Contextual Overlay** from the high-volatility data in the Mindscape.  
      * The Core and Overlay are combined into a single Persona object and returned to the Actor.
 
-### **Phase 3: The Feedback Loop (Training the Persona Mapper)**
+### **Phase 3: The Feedback Loop (Improving Mapper Configurations)**
 
-* **Goal:** To enable the system to learn from real-world outcomes, making the Persona Mappers more accurate over time.  
+* **Goal:** To enable the service to learn from real-world outcomes, making the mapper configurations more accurate over time.  
 * **Process:**  
   1. **Action & Observation:** An Actor uses a generated Persona to perform a task.  
   2. **Submit Feedback:** The Actor (or a human supervisor) submits feedback via the POST /feedback endpoint.  
-  3. **Asynchronous Refinement:** A background **Mapping Supervisor** periodically analyzes feedback associated with a specific Persona Mapper.  
-  4. **Checkpointed Improvement:** The Mapping Supervisor proposes an update to the Persona Mapper and saves it as a new, checkpointed version.
+  3. **Asynchronous Refinement:** A background **Configuration Adjuster** analyzes feedback associated with specific rules in the Persona Mapper configuration.  
+  4. **Automatic Weight Adjustment:** The system adjusts rule weights and thresholds in the mapper configuration based on feedback patterns, creating a new version of the configuration automatically.
 
 ## **4. Next Steps**
 

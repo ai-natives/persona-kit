@@ -40,7 +40,9 @@ Individual knowledge workers (developers, designers, analysts) who:
 ## Key Decisions
 - **Storage**: PostgreSQL with JSONB (Option B) - provides good balance of flexibility and queryability
 - **Single Mapper**: Daily Work Optimizer only - focused on immediate value
+- **Mapper Implementation**: Configuration-driven (YAML/JSON) - no code, uploaded via API
 - **Bootstrapping**: Quick wizard + passive observation - minimal user effort
 - **Feedback**: Simple helpful/not helpful - reduces friction
-- **Architecture**: Monolithic service first - can decompose later
+- **Architecture**: Service-based with REST API - not a framework or library
 - **Language**: Python/FastAPI - good ecosystem for data processing and APIs
+- **Domain Logic**: Zero built-in domain knowledge - all logic in configurations

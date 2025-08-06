@@ -1,10 +1,10 @@
 # PersonaKit Technical Specification
 
-## **1. System Architecture: Hybrid Model (Service + SDK)**
+## **1. System Architecture: Service-Based Model**
 
-To support both a centralized source of truth and a lightweight, local-first experience (e.g., on a phone), the system uses a hybrid architecture.
+PersonaKit operates as a centralized service that applications interact with via REST API.
 
-* **PersonaKit Service:** A central, server-side application that is the canonical source of truth. It manages the databases, exposes the HTTP API, and runs the background agents (Mindscaper, Mapping Supervisor).  
+* **PersonaKit Service:** A central, server-side application that is the canonical source of truth. It manages the databases, exposes the HTTP API, runs the background agents (Mindscaper, Configuration Adjuster), and evaluates mapper configurations through its rule engine.  
 * **PersonaKit SDK:** A lightweight client library (e.g., a Python package) integrated into the Actor's application. It handles API communication, manages a local cache of Personas and Mappers, and enables offline functionality.
 
 ## **2. Data Synchronization Protocol**
@@ -45,7 +45,51 @@ GET /map-persona?mapperId=...&personaId=...&detailLevel=...
 POST /feedback
 ```
 
-### **5.3 Synchronization**
+### **5.3 Mapper Configuration Management**
+```
+GET /mappers                       # List available mappers
+GET /mappers/{id}                  # Get specific mapper configuration
+POST /mappers                      # Upload new mapper configuration
+PUT /mappers/{id}                  # Update mapper configuration
+GET /mappers/{id}/versions         # Get version history
+```
+
+### **5.4 Synchronization**
 ```
 GET /sync?since={timestamp}
-``` 
+```
+
+## **6. Mapper Configuration System**
+
+### **6.1 Configuration Storage**
+Mapper configurations are stored as JSONB in the database, allowing for:
+- Version tracking with automatic incrementing
+- Efficient querying of rule conditions
+- Atomic updates to rule weights
+- Configuration validation before storage
+
+### **6.2 Rule Engine**
+The rule engine evaluates mapper configurations:
+1. **Condition Evaluation**: Checks trait values, time conditions, and context
+2. **Weight Application**: Applies rule weights to determine which suggestions to generate
+3. **Template Rendering**: Fills in suggestion templates with dynamic values
+4. **Feedback Integration**: Maps suggestions back to rules for weight adjustment
+
+### **6.3 Configuration Schema**
+```yaml
+metadata:
+  id: string                      # Unique identifier
+  version: string                 # Semantic version
+  description: string             # Human-readable description
+  
+trait_mappings:                   # For feedback processing
+  suggestion_type: [trait_names]
+  
+rules:
+  - id: string
+    conditions:                   # When to apply this rule
+      all/any: [...]             # Logical operators
+    actions:                      # What to do
+      - generate_suggestion: {...}
+    weight: float                 # Adjustable by feedback
+```

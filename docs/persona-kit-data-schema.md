@@ -124,75 +124,111 @@ interface TraitEntry {
 }
 ```
 
-### 1.3 Persona Mapper Schema
+### 1.3 Mapper Configuration Schema
 ```typescript
-interface PersonaMapper {
+interface MapperConfiguration {
   mapperId: string;                   // UUID
-  name: string;                       // e.g., "Technical Review Mapper"
-  purpose: string;                    // Description of intended use
-  version: string;                    // Semantic versioning (e.g., "1.2.3")
-  parentVersion?: string;             // For version lineage
+  configId: string;                   // Unique identifier
+  version: number;                    // Auto-incremented on changes
   
-  // Configuration for persona generation
-  configuration: {
-    requiredTraits: string[];         // Must-have traits from traitMatrix
-    optionalTraits: string[];         // Nice-to-have traits
-    knowledgeDomains: string[];       // Relevant knowledge areas
-    contextWindow: number;            // Days of recent data to consider
-    
-    // Retrieval strategies
-    retrievalPipeline: {
-      hotLayerQueries: QueryTemplate[];
-      warmLayerQueries: VectorQueryTemplate[];
-      coldLayerAnalysis?: GraphQueryTemplate[];
-    };
-    
-    // Output formatting
-    outputTemplate: {
-      sections: PersonaSectionTemplate[];
-      formatting: OutputFormatting;
-    };
+  // Metadata
+  metadata: {
+    id: string;                       // Human-readable ID
+    name: string;                     // Display name
+    description: string;              // Purpose and use case
+    author: string;                   // Creator attribution
+    created: Date;
+    lastModified: Date;
   };
   
-  // Training/improvement metadata
-  trainingMetadata: {
-    totalFeedbackCount: number;
-    averageEffectivenessScore?: number;
-    lastTrainingRun?: Date;
-    trainingDatasetId?: string;
+  // Required traits for this mapper
+  requiredTraits: string[];           // Trait paths needed
+  
+  // Suggestion type to trait mappings for feedback
+  traitMappings: Record<string, string[]>;
+  
+  // Rules that drive persona generation
+  rules: Rule[];
+  
+  // Templates for generating suggestions
+  templates: Record<string, SuggestionTemplate>;
+  
+  // Feedback processing settings
+  feedbackSettings: {
+    negativeThreshold: number;        // Count before adjustment
+    negativeWindowDays: number;       // Time window
+    positiveAdjustment: number;       // Weight increase factor
+    negativeAdjustment: number;       // Weight decrease factor
+    maxWeight: number;                // Maximum weight
+    minWeight: number;                // Minimum weight
   };
   
   // Lifecycle
   status: 'draft' | 'active' | 'deprecated';
-  createdAt: Date;
-  createdBy: string;
-  updatedAt: Date;
-  updatedBy: string;
+  
+  // Tracking
+  usageStats: {
+    totalPersonasGenerated: number;
+    totalFeedbackReceived: number;
+    averageHelpfulRate?: number;
+    lastUsed?: Date;
+  };
 }
 
-interface QueryTemplate {
-  queryId: string;
-  queryType: 'exact' | 'range' | 'pattern';
-  targetField: string;
-  parameters: Record<string, any>;
-  priority: number;                   // For query ordering
+interface Rule {
+  id: string;                         // Unique rule identifier
+  conditions: RuleCondition;          // When to apply
+  actions: RuleAction[];              // What to do
+  weight: number;                     // Feedback-adjustable weight
+  metadata?: {
+    lastAdjusted?: Date;
+    adjustmentReason?: string;
+    originalWeight: number;
+  };
 }
 
-interface VectorQueryTemplate {
-  queryId: string;
-  embeddingStrategy: 'semantic' | 'hybrid';
-  queryPrompt: string;
-  topK: number;
-  minSimilarity: number;
-  filters?: Record<string, any>;
+interface RuleCondition {
+  type: 'all' | 'any' | 'single';    // Logical operator
+  conditions?: RuleCondition[];       // Nested conditions
+  traitCheck?: {
+    path: string;                     // Trait path to check
+    operator: 'equals' | 'not_equals' | 'greater' | 'less' | 'contains' | 'exists';
+    value: any;                       // Value to compare
+  };
+  timeCheck?: {
+    period?: 'morning' | 'afternoon' | 'evening' | 'night';
+    hourRange?: [number, number];     // 24-hour format
+    dayOfWeek?: string[];
+    timezone?: string;
+  };
+  contextCheck?: {
+    field: string;                    // Context field to check
+    operator: string;
+    value: any;
+  };
 }
 
-interface PersonaSectionTemplate {
-  sectionName: string;
-  dataSource: string[];               // Which queries feed this section
-  prompt: string;                     // LLM prompt for section generation
-  maxTokens: number;
-  required: boolean;
+interface RuleAction {
+  type: 'generate_suggestion';
+  generateSuggestion?: {
+    type: string;                     // Suggestion type
+    template: string;                 // Template ID to use
+    parameters: Record<string, ParameterSource>;
+  };
+}
+
+interface ParameterSource {
+  fromTrait?: string;                 // Get value from trait
+  fromContext?: string;               // Get value from context
+  default?: any;                      // Default value
+  transform?: string;                 // Optional transformation
+}
+
+interface SuggestionTemplate {
+  title: string;                      // Template with {placeholders}
+  description: string;                // Template with {placeholders}
+  priority: 'high' | 'medium' | 'low';
+  metadata?: Record<string, any>;     // Additional template data
 }
 ```
 

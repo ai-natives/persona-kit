@@ -38,6 +38,21 @@ class PersonaMapper(ABC):
         pass
 
     @abstractmethod
+    def get_trait_mappings(self) -> dict[str, list[str]]:
+        """
+        Get mapping of suggestion types to trait names for feedback processing.
+        
+        Returns:
+            Dict mapping suggestion types to lists of trait names:
+            {
+                "task_recommendation": ["work.energy_patterns", "work.focus_duration"],
+                "break_reminder": ["work.fatigue_patterns", "work.sustained_attention"],
+                # ...
+            }
+        """
+        pass
+
+    @abstractmethod
     def map_to_persona(
         self, mindscape: Mindscape, context: dict[str, Any] | None = None
     ) -> dict[str, Any]:

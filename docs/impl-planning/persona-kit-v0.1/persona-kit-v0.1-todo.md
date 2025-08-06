@@ -363,6 +363,155 @@ def process_feedback(feedback):
 3. **Can you query feedback analytics?**
    - [x] Analytics endpoint response: Returns summary with total, positive/negative counts, rates, and breakdown by suggestion type
 
+## Phase 6.5: Configuration-Driven Architecture
+
+**CRITICAL: Complete before Phase 7 to establish proper service patterns**
+
+### Problem Statement
+PersonaKit must be a pure service where domain logic lives in configurations, not code. Currently:
+- `DailyWorkOptimizer` is implemented as Python code
+- Trait mappings are hardcoded in the feedback processor
+- Adding new domains requires code changes
+- Domain experts cannot modify mappers without programming
+
+### Solution: Configuration-Driven Mappers
+Transform mappers from code to YAML/JSON configurations that:
+- Define rules declaratively
+- Can be uploaded/modified via API
+- Adjust automatically based on feedback
+- Require no programming knowledge
+
+### Architectural Goals
+- **Pure Service**: PersonaKit provides rule engine, not domain logic
+- **Configuration as Data**: Mappers stored in database, not filesystem
+- **Runtime Flexibility**: Upload new mappers without deployment
+- **Automatic Evolution**: Feedback adjusts rule weights
+
+### Implementation Tasks
+
+#### Rule Engine Development
+- [ ] Create `src/services/rule_engine.py` for configuration evaluation
+- [ ] Implement condition evaluator (trait checks, time checks, context)
+- [ ] Implement action executor (generate suggestions from templates)
+- [ ] Create configuration validator against schema
+
+#### Configuration Management
+- [ ] Add `mapper_configs` table to store YAML/JSON as JSONB
+- [ ] Create `src/models/mapper_config.py` model
+- [ ] Add version tracking with auto-increment
+- [ ] Implement configuration API endpoints:
+  - `GET /mappers` - List available configurations
+  - `POST /mappers` - Upload new configuration
+  - `GET /mappers/{id}` - Get specific configuration
+  - `PUT /mappers/{id}` - Update configuration
+  - `GET /mappers/{id}/versions` - Version history
+
+#### Convert DailyWorkOptimizer
+- [ ] Extract current logic into YAML configuration
+- [ ] Create `configs/examples/daily_work_optimizer.yaml`
+- [ ] Remove `src/mappers/daily_work_optimizer.py`
+- [ ] Test equivalence between old code and new config
+
+#### Feedback Integration
+- [ ] Update feedback processor to find rules that generated suggestions
+- [ ] Implement weight adjustment in configurations
+- [ ] Track which rule version generated each suggestion
+- [ ] Create `src/services/config_adjuster.py` for weight updates
+
+#### Remove Code Dependencies
+- [ ] Remove all imports of specific mapper classes
+- [ ] Update persona generation to use rule engine
+- [ ] Make feedback processor configuration-aware
+- [ ] Ensure core has zero domain knowledge
+
+### Configuration Schema
+```yaml
+metadata:
+  id: string
+  version: string
+  description: string
+  
+required_traits: [string]
+
+trait_mappings:
+  suggestion_type: [trait_names]
+
+rules:
+  - id: string
+    conditions:
+      all/any:
+        - trait_check:
+            path: string
+            operator: equals/greater/less/contains
+            value: any
+        - time_check:
+            period: morning/afternoon/evening
+        - context_check:
+            field: string
+            operator: string
+            value: any
+    actions:
+      - generate_suggestion:
+          type: string
+          template: string
+          parameters: map
+    weight: float
+
+templates:
+  template_id:
+    title: string
+    description: string
+    priority: high/medium/low
+```
+
+### Directory Structure (After Phase 6.5)
+```
+src/
+├── models/
+│   ├── mapper_config.py           # Configuration storage model
+│   └── ... (existing models)
+├── services/
+│   ├── rule_engine.py            # Evaluates configurations
+│   ├── config_adjuster.py        # Updates weights from feedback
+│   └── ... (existing services)
+├── api/
+│   ├── mappers.py                # Configuration CRUD endpoints
+│   └── ... (existing endpoints)
+└── mappers/
+    └── base.py                   # Deprecated, interface only
+
+configs/                          # Example configurations (not code)
+└── examples/
+    ├── daily_work_optimizer.yaml
+    ├── therapy_insights.yaml
+    └── coaching_strategies.yaml
+
+persona-kit-examples/             # Separate repo
+└── ... (example applications using PersonaKit)
+```
+
+### Phase 6.5 Verification
+- [ ] Upload daily_work_optimizer.yaml via API
+- [ ] Generate persona using configuration (not code)
+- [ ] Submit feedback and verify weight adjustment
+- [ ] Upload a therapy mapper without touching code
+- [ ] List available mappers via API
+- [ ] Run PersonaKit with zero built-in mappers
+
+### Phase 6.5 Reality Check
+**STOP! Answer these questions with specific details:**
+1. **Is PersonaKit truly configuration-driven?**
+   - [ ] Can you create a new mapper via API only? _____
+   - [ ] Do mappers exist as YAML/JSON in database? _____
+
+2. **Does the rule engine work?**  
+   - [ ] Can it evaluate complex conditions? _____
+   - [ ] Does it generate suggestions from templates? _____
+
+3. **Is feedback working?**
+   - [ ] Do rule weights adjust automatically? _____
+   - [ ] Can you see configuration version history? _____
+
 ## Phase 7: Developer Experience
 - [ ] Add example scripts in examples/ directory
 - [ ] Write API documentation with OpenAPI/Swagger
@@ -455,6 +604,7 @@ def process_feedback(feedback):
 - **Phase 4**: Daily Work Optimizer
 - **Phase 5**: Bootstrapping Flow
 - **Phase 6**: Feedback Loop
+- **Phase 6.5**: Architectural Separation ⚠️ **CRITICAL**
 - **Phase 7**: Developer Experience
 - **Phase 8**: Testing & Polish
 
@@ -466,6 +616,7 @@ def process_feedback(feedback):
 
 ## Definition of Done
 - [ ] All phases complete with verifications passing
+- [ ] **Phase 6.5 architectural separation complete** (PersonaKit core is domain-agnostic)
 - [ ] Documentation is comprehensive and accurate
 - [ ] System runs with single command
 - [ ] Code is clean and maintainable
