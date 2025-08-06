@@ -72,8 +72,8 @@ Based on the answers from Step 1, create `[project-name]-context.md` within the 
 
 Using the work plan template, create `[project-name]-todo.md` in the same project directory:
 
-1. **Read the template:** `wiki/DELETE-ME-doc-fragments/work-plan-template.md`
-2. **Read the quality guidelines:** `wiki/DELETE-ME-doc-fragments/work-plan-quality-guidelines.md`
+1. **Read the template:** `docs/impl-planning/work-plan-template.md`
+2. **Read the quality guidelines:** `docs/impl-planning/work-plan-quality-guidelines.md`
 3. **Structure the project into 4-8 phases**
 4. **For each phase:**
    - 4-8 specific, actionable tasks
@@ -94,7 +94,7 @@ Using the work plan template, create `[project-name]-todo.md` in the same projec
 
 Using the execution prompt template, create `[project-name]-exec.md` in the same project directory:
 
-1. **Read the template:** `wiki/DELETE-ME-doc-fragments/execution-prompt-template.md`
+1. **Read the template:** `docs/impl-planning/execution-prompt-template.md`
 2. **Fill in all placeholders:**
    - PROJECT_NAME (human-readable with spaces)
    - WORK_PLAN_FILE (path from project root, e.g., `docs/impl-planning/[project-name]/[project-name]-todo.md`)
@@ -160,10 +160,9 @@ docs/impl-planning/
 - If redoing a project, archive the old directory first
 
 **Available templates and guides:**
-- `wiki/DELETE-ME-doc-fragments/work-plan-template.md` - Structure for work plans
-- `wiki/DELETE-ME-doc-fragments/work-plan-quality-guidelines.md` - Quality characteristics
-- `wiki/DELETE-ME-doc-fragments/execution-prompt-template.md` - Execution prompt structure
-- `wiki/DELETE-ME-doc-fragments/artifact-generation-workflow.md` - Overall workflow
+- `docs/impl-planning/work-plan-template.md` - Structure for work plans
+- `docs/impl-planning/work-plan-quality-guidelines.md` - Quality characteristics
+- `docs/impl-planning/execution-prompt-template.md` - Execution prompt structure
 
 ## Remember
 

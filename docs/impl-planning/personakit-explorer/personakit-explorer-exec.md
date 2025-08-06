@@ -1,20 +1,20 @@
-# PersonaKit v0.1 Execution Prompt - MUST READ BEFORE PROCEEDING
+# PersonaKit Explorer Execution Prompt - MUST READ BEFORE PROCEEDING
 
 ## Critical Instructions for Claude
 
-You are about to execute the work plan in @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-todo.md. To succeed, you MUST follow these strict guidelines:
+You are about to execute the work plan in @docs/impl-planning/personakit-explorer/personakit-explorer-todo.md. To succeed, you MUST follow these strict guidelines:
 
 ### 1. Plan Adherence Protocol
 
 **BEFORE STARTING ANY WORK:**
-1. Read @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-context.md to understand WHY we're building this
-2. Read the ENTIRE @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-todo.md file to understand WHAT we're doing
+1. Read @docs/impl-planning/personakit-explorer/personakit-explorer-context.md to understand WHY we're building this CODE
+2. Read the ENTIRE @docs/impl-planning/personakit-explorer/personakit-explorer-todo.md file to understand WHAT we're doing
 3. Identify which phase you're currently on
 4. Read the CONTEXT CHECKPOINT section below to understand previous work
 5. ONLY work on the current phase - do not jump ahead
 
 **WHILE WORKING:**
-1. Keep @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-todo.md open and reference it every 3-5 steps
+1. Keep @docs/impl-planning/personakit-explorer/personakit-explorer-todo.md open and reference it every 3-5 steps
 2. For each task item:
    - Copy the exact task description before implementing
    - Implement ONLY what the task describes
@@ -36,15 +36,15 @@ If you discover something that makes you want to deviate from the plan:
 
 **AT THE START OF EACH SESSION:**
 1. Read this entire prompt
-2. Read @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-context.md to refresh understanding of the problem
+2. Read @docs/impl-planning/personakit-explorer/personakit-explorer-context.md to refresh understanding of the problem
 3. Read the CONTEXT CHECKPOINT section
-4. Review completed phases in @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-todo.md
+4. Review completed phases in @docs/impl-planning/personakit-explorer/personakit-explorer-todo.md
 5. Identify exactly where you left off
 6. State clearly: "I am resuming at Phase X, Task Y"
 
 **BEFORE ENDING A SESSION:**
 1. Update the CONTEXT CHECKPOINT section below
-2. Mark all completed items in @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-todo.md
+2. Mark all completed items in @docs/impl-planning/personakit-explorer/personakit-explorer-todo.md
 3. **CRITICAL: NEVER run git add or git commit commands**:
    - DO NOT run `git add` or `git commit` under any circumstances
    - DO NOT stage files or create commits automatically
@@ -85,9 +85,10 @@ If you discover something that makes you want to deviate from the plan:
    - This ensures progress is never lost if session ends
 
 **CRITICAL: BE LITERAL ABOUT VERIFICATIONS**
-- If it says "Run ruff and fix ALL issues" - run it repeatedly until 0 errors
-- If it says "Verify JSONB queries work" - actually run queries and check results
-- If it says "Check that Persona TTL is enforced" - test with expired personas
+- If it says "Run pnpm run lint" - run it repeatedly until 0 errors
+- If it says "All tabs render without console errors" - open browser console and check
+- If it says "Copy button puts code in clipboard" - actually test copying and pasting
+- If it says "Initial load < 2 seconds" - measure with dev tools
 - These are not suggestions - they are requirements
 
 **ABSOLUTE RULE: NEVER CLAIM COMPLETION WITH FAILING TESTS**
@@ -96,11 +97,12 @@ If you discover something that makes you want to deviate from the plan:
 - If tests fail, you MUST fix the underlying issue, not skip or ignore the test
 
 **Code Verification Examples:**
-- Run tests: `pytest tests/`
-- Check types: `mypy src/`
-- Lint code: `ruff check`
-- Test functionality: Execute examples and verify output
-- Check for regressions: Run integration tests
+- Run tests: `pnpm test` (using Vitest)
+- Check types: `tsc --noEmit`
+- Lint code: `pnpm run biome:check` (using Biome)
+- Test functionality: Execute in browser and verify behavior
+- Check for regressions: Test all existing features still work
+- Verify performance: Use browser DevTools Performance tab
 
 ### 4. Communication Protocol
 
@@ -153,50 +155,51 @@ If you're unsure about anything:
 
 **EXAMPLE CHECKPOINT:**
 ```
-**Task: Create database schema and migrations**
-- Implementation: Created PostgreSQL schema with 4 tables (observations, mindscapes, personas, feedback)
-- Files affected: src/db/schema.sql, src/db/migrations/001_initial.sql
+**Task: Create real PersonaKit API client**
+- Implementation: Created API client with axios, error handling, and retry logic
+- Files affected: src/api/personakit-real.ts, src/api/client.ts
 - Verification: 
-  - Ran migrations: `docker-compose exec db psql -U postgres -d personakit < migrations/001_initial.sql`
-  - Verified tables: All 4 tables created with correct columns and indexes
-  - Tested JSONB: INSERT and SELECT on mindscapes.traits works correctly
+  - Connected to API on port 8042: Success
+  - Tested error handling by stopping API: Shows error boundary
+  - Response time: 150-300ms for mindscape fetch
 - Status: COMPLETE ✓
-- Notes: Added timezone support to all timestamp columns for consistency
+- Notes: Added exponential backoff for retries, max 3 attempts
 ```
 
 ---
 
 ## CONTEXT CHECKPOINT (Update this as you work)
 
-**Last Updated:** 2025-01-08 (Updated by Claude)
-**Current Phase:** Phase 5 (Bootstrapping Flow - Companion App)
-**Current Task:** Starting companion app implementation
-**Completed Phases:** Phase 1 (Foundation Setup), Phase 2 (Core Data Models), Phase 3 (Observation Processing), Phase 4 (Daily Work Optimizer + CLI)
+**Last Updated:** 2025-08-06 18:15 JST
+**Current Phase:** Phase 3 - Real API Integration
+**Current Task:** Ready to start Phase 3
+**Completed Phases:** Phase 1 (Foundation), Phase 2 (Core Features)
 
 **Key Decisions Made:**
-- Using Python with FastAPI for the API
-- PostgreSQL with JSONB for storage (Option B from schema options)
-- Single mapper focus (Daily Work Optimizer)
-- Monolithic architecture to start
-- Custom ports: 5436 (PostgreSQL), 8042 (API) to avoid conflicts
-- Repository pattern for database operations
-- Using `uv` for Python package management (per user instruction)
+- Using React 19 with TypeScript and Vite
+- TanStack Query for data management
+- Radix UI for accessible components
+- Mock-first development approach
+- Located in /tests/personakit-explorer/ directory
+- Renamed from "Admin Tool" to "Explorer" to distinguish from competing workbench
 
 **Important Context:**
-- Building minimal Work Assistant use case only
-- Must work completely offline/locally
-- Single user system (no multi-tenancy)
-- See @docs/persona-kit-v0.1-specification.md for detailed requirements
+- Explorer is for developers/operators, not end users
+- Complements but doesn't overlap with Companion App (now called Workbench per v0.1 todo update)
+- Must work with both mock and real PersonaKit API
+- Three main features implemented: Mindscape Explorer, Persona Lab, Agent Playground
+- See @docs/impl-planning/personakit-explorer/personakit-explorer-context.md for full problem analysis
 
-**Phase 5 Architecture Decision:**
-- Implementing bootstrap features in separate companion app
-- Keeps PersonaKit core focused on API
-- Companion demonstrates integration patterns
+**Implementation Progress:**
+- Created comprehensive mock data in src/api/mockData.ts
+- Built three main components with full functionality
+- Mock API simulates realistic delays (150-600ms)
+- All UI components working with mock data
+- Ready for real API integration
 
 **Next Steps:**
-- Create persona-kit-companion structure
-- Implement bootstrap wizard
-- Create mock data generator
+- Begin Phase 3: Real API Integration
+- Add environment configuration for API mode switching
 
 ---
 
@@ -209,107 +212,38 @@ If you're unsure about anything:
 ## VERIFICATION LOG (Record all verification results)
 
 ### Phase 1 Verification (2025-08-06)
-- ✅ PostgreSQL running on port 5436
-- ✅ Migrations applied successfully (all tables created)
-- ✅ Health check endpoint working at http://localhost:8042/health/
-- ✅ pytest running (1 test passing)
-- ✅ ruff check passing (fixed 81 errors)
-- ✅ mypy src/ passing (fixed 7 type errors)
-- ✅ Error handling tested (404, 405 responses)
-- ✅ JSON logs verified working
+- ✅ Dev server running at http://localhost:5174
+- ✅ All 4 tabs render (3 active, 1 coming soon)
+- ✅ No console errors
+- ✅ Mock API delays working (150-600ms)
+- ✅ Responsive layout verified
 
 ### Phase 2 Verification (2025-08-06)
-- ✅ Unit tests written for models (4 tests passing)
-- ✅ CRUD operations tested via Python scripts
-- ✅ JSONB queries verified working:
-  ```
-  Peak hours: ['09:00-11:00', '14:00-16:00']
-  Likes music: True
-  ```
-- ✅ Persona TTL tested (expired personas filtered)
-- ✅ ruff check passing
-- ✅ mypy src/ passing
-- ✅ All 6 indexes created and verified:
-  - idx_observations_person_created
-  - idx_mindscapes_person
-  - idx_personas_expires
-  - idx_personas_person_id
-  - idx_feedback_persona
-  - idx_outbox_status
-- ✅ Testcontainers configured for proper PostgreSQL testing
-- ✅ 9/10 tests passing (1 minor transaction issue in mindscape upsert test)
-
-### Phase 3 Verification (2025-01-08)
-- ✅ Observation processing pipeline implemented
-- ✅ Background worker with AsyncIO
-- ✅ Trait extraction for work patterns
-- ✅ All 7 observation processing tests passing
-- ✅ Mock data generator working
-
-### Phase 4 Verification (2025-01-08)
-- ✅ PersonaMapper base class implemented
-- ✅ DailyWorkOptimizer mapper complete
-- ✅ Persona API endpoints working
-- ✅ CLI command `persona-kit suggest` with Rich formatting
-- ✅ All 8 mapper tests passing
-- ✅ Total: 25 tests passing
+- ✅ Mindscape Explorer: Trait browser with expandable values
+- ✅ Trait timeline visualization with 4 data points
+- ✅ Persona Lab: Context controls generate different personas
+- ✅ Agent Playground: Copy/download work for all frameworks
+- ✅ Observation history shows recent items
 
 ---
 
 ## Implementation Notes (Add important discoveries here)
 
-### Phase 1 Notes:
-- Fixed datetime deprecation: `datetime.utcnow()` → `datetime.now(UTC)`
-- Fixed SQLAlchemy metadata conflict by renaming to `meta` in Python
-- Had to add greenlet dependency for async SQLAlchemy
-- Using async_sessionmaker instead of regular sessionmaker
-
-### Phase 2 Notes:
-- Repository pattern implemented with BaseRepository for common CRUD
-- Enum handling issue: PostgreSQL expects lowercase but Python enum sends uppercase
-  - Fixed with `native_enum=False` in SQLAlchemy Enum type
-- SQLite incompatible with PostgreSQL features (JSONB, enums) for testing
-  - Solved by using testcontainers for real PostgreSQL in tests
-- JSONB queries work perfectly with PostgreSQL
-- Mindscape upsert uses ON CONFLICT for atomic updates
-- Feedback repository includes advanced statistics methods
-- Test suite now uses testcontainers for proper isolation
-- Added outbox_tasks columns: attempts, last_error, completed_at via migration
-
-### Phase 3 Planning Decisions:
-- Use AsyncIO background task (not separate process) for simplicity
-- Use FOR UPDATE SKIP LOCKED for queue processing (PostgreSQL native)
-- Process observations immediately, not daily summaries
-- Simple trait schema with confidence scores and sample sizes
-- Basic validation only (schema + timestamp checks)
-- Skip duplicate detection for v0.1
-
-### Admin Tool Development (Parallel Work):
-**Task: PersonaKit Admin Tool**
-- Implementation: Created standalone React app in /tests/admin-tool/
-- Files affected: 
-  - /tests/admin-tool/src/api/mockData.ts (mock data)
-  - /tests/admin-tool/src/api/personakit.ts (mock API client)
-  - /tests/admin-tool/src/components/MindscapeExplorer.tsx
-  - /tests/admin-tool/src/components/PersonaLab.tsx
-  - /tests/admin-tool/src/components/AgentPlayground.tsx
-  - /tests/admin-tool/src/App.tsx and App.css
-- Verification: Running on http://localhost:5174/
-- Status: COMPLETE ✓
-- Notes: 
-  - Uses mock data to avoid conflicts with main implementation
-  - Three main features: Mindscape Explorer, Persona Lab, Agent Playground
-  - Provides visual interface for understanding PersonaKit concepts
-  - Built with React, TypeScript, Vite, TanStack Query, Radix UI
+### Phase 1-2 Notes:
+- Used CSS Grid for complex layouts
+- Mock data closely mirrors real PersonaKit structure
+- TanStack Query handles caching automatically
+- Radix UI provides unstyled, accessible components
+- Bundle size currently ~300KB (well under target)
 
 ---
 
 ## REMINDER CHECKLIST (Read before EVERY work session)
 
 - [ ] I have read this entire prompt
-- [ ] I have read @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-context.md to understand the problem
+- [ ] I have read @docs/impl-planning/personakit-explorer/personakit-explorer-context.md to understand the problem
 - [ ] I have read the CONTEXT CHECKPOINT
-- [ ] I have identified my current position in @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-todo.md
+- [ ] I have identified my current position in @docs/impl-planning/personakit-explorer/personakit-explorer-todo.md
 - [ ] I understand I must follow the plan exactly
 - [ ] I will ask for help if I need to deviate
 - [ ] I will update this document before ending my session
@@ -330,14 +264,15 @@ When in doubt, stop and ask. It's better to pause for clarification than to impl
 If you have been auto-compacted or are starting fresh:
 
 1. **Read these files IN ORDER:**
-   - @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-context.md - Understand the problem and approach
-   - @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-todo.md - See the full plan and what's been completed
-   - @docs/impl-planning/persona-kit-v0.1/persona-kit-v0.1-exec.md - Read this entire file
+   - @docs/impl-planning/personakit-explorer/personakit-explorer-context.md - Understand the problem and approach
+   - @docs/impl-planning/personakit-explorer/personakit-explorer-todo.md - See the full plan and what's been completed
+   - @docs/impl-planning/personakit-explorer/personakit-explorer-exec.md - Read this entire file
 
 2. **Check the CONTEXT CHECKPOINT section above** - This is your primary memory
 
 3. **Scan recent changes** to understand what was just done:
    ```bash
+   cd tests/admin-tool
    git log --oneline -10
    git diff HEAD~1
    ls -la src/

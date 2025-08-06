@@ -12,9 +12,28 @@ PersonaKit v0.1 is a focused MVP implementation of the Work Assistant use case, 
 4. **Highest value** - Directly improves daily productivity
 5. **Fast iteration** - Single-user focus enables rapid testing and refinement
 
+## v0.1 Architecture
+
+PersonaKit v0.1 is split into two components:
+
+1. **PersonaKit Core (API)** - The persona engine
+   - REST API for observations, mindscapes, personas
+   - Background processing of observations
+   - Trait extraction and mindscape management
+   - Persona generation via mappers
+   - Minimal CLI for API interaction (e.g., `persona-kit suggest`)
+
+2. **PersonaKit Companion** - User-facing features
+   - Bootstrap wizard for new users
+   - Mock data generator for testing
+   - Example integrations
+   - Onboarding flows
+
+This separation keeps the core focused on being a robust API that other applications can integrate with.
+
 ## v0.1 Scope
 
-### Core Features
+### Core Features (PersonaKit API)
 
 #### 1. Foundation Components
 - **Storage**: PostgreSQL 15+ with JSONB (Option B from architectural options)
@@ -58,8 +77,8 @@ PersonaKit v0.1 is a focused MVP implementation of the Work Assistant use case, 
 
 #### 3. Minimal Bootstrapping System
 
-**Quick Start Flow** (< 10 minutes):
-1. **Initial Setup Wizard**
+**Quick Start Flow** (< 10 minutes) - Provided by Companion App:
+1. **Initial Setup Wizard** (in companion)
    ```
    Welcome! Let's learn your work patterns in 5 minutes.
    
@@ -69,14 +88,14 @@ PersonaKit v0.1 is a focused MVP implementation of the Work Assistant use case, 
    What disrupts your flow most? [Meetings/Slack/Email/Context switches]
    ```
 
-2. **Passive Observation**
-   - Calendar analysis (meeting density, patterns)
-   - Work artifact timestamps (when files are edited)
-   - No invasive monitoring
+2. **Mock Data Option** (in companion)
+   - Generate realistic work patterns for testing
+   - Immediate persona generation without waiting
 
-3. **Progressive Enhancement**
-   - Each day adds more observations
-   - System prompts for specific missing data only when relevant
+3. **API Integration**
+   - Companion sends observations to PersonaKit API
+   - PersonaKit processes and builds mindscape
+   - Personas available immediately via API
 
 #### 4. Daily Workflow
 

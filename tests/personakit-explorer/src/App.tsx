@@ -28,7 +28,7 @@ function App() {
       <div className="app">
         <header className="app-header">
           <div className="header-content">
-            <h1>PersonaKit Admin Tool</h1>
+            <h1>PersonaKit Explorer</h1>
             <div className="header-info">
               <span>Person ID: {MOCK_PERSON_ID.slice(0, 8)}...</span>
               <span>Environment: Development (Mock Data)</span>

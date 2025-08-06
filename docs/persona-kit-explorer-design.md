@@ -1,8 +1,8 @@
-# PersonaKit Admin Tool Design
+# PersonaKit Explorer Design
 
 ## Overview
 
-The PersonaKit Admin Tool is a web-based workbench for exploring and experimenting with mindscapes, personas, and mappers. It provides visualization, testing, and integration capabilities for developers and power users.
+The PersonaKit Explorer is a web-based tool for exploring and experimenting with mindscapes, personas, and mappers. It provides visualization, testing, and integration capabilities for developers and power users.
 
 ## Core Features
 
