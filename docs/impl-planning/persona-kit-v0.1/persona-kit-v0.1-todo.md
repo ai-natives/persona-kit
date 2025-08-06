@@ -190,35 +190,35 @@ TRAIT_EXTRACTORS = {
    - [x] Observation ID → Trait name → Mindscape version: Observation ID created → traits extracted (work.focus_duration, etc.) → Mindscape version 1 with merged traits
 
 ## Phase 4: Daily Work Optimizer Mapper (Estimated: 2 days)
-- [ ] Implement PersonaMapper base class
-- [ ] Create DailyWorkOptimizer mapper
-- [ ] Define required traits for work optimization
-- [ ] Implement persona generation from mindscape
-- [ ] Add time-of-day context handling
-- [ ] Create suggestion generation logic
-- [ ] Implement suggestion delivery mechanism:
+- [x] Implement PersonaMapper base class
+- [x] Create DailyWorkOptimizer mapper
+- [x] Define required traits for work optimization
+- [x] Implement persona generation from mindscape
+- [x] Add time-of-day context handling
+- [x] Create suggestion generation logic
+- [x] Implement suggestion delivery mechanism:
   - CLI command: `persona-kit suggest --now`
   - Returns formatted suggestions for current time context
-- [ ] Write comprehensive tests for mapper
+- [x] Write comprehensive tests for mapper
 
 ### Phase 4 Verification
-- [ ] Generate persona with test mindscape
-- [ ] Verify required traits are included
-- [ ] Check that suggestions make sense
-- [ ] Test morning vs afternoon contexts
-- [ ] Verify persona TTL is set correctly
-- [ ] All mapper tests pass
-- [ ] Run CLI suggest command and verify output format
+- [x] Generate persona with test mindscape
+- [x] Verify required traits are included
+- [x] Check that suggestions make sense
+- [x] Test morning vs afternoon contexts
+- [x] Verify persona TTL is set correctly
+- [x] All mapper tests pass
+- [x] Run CLI suggest command and verify output format (see docs/cli-example-output.md)
 
 ### Phase 4 Reality Check
 **STOP! Answer these questions with specific details:**
 1. **Did you generate an actual persona?**
-   - [ ] API call used: _____
-   - [ ] Persona output: _____
+   - [x] API call used: POST /personas with mapper_id="daily_work_optimizer"
+   - [x] Persona output: Contains core work_style (focus blocks, task switching tolerance) and overlay with current state and suggestions
 
 2. **Are the suggestions actionable?**
-   - [ ] Example suggestion: _____
-   - [ ] Why it's helpful: _____
+   - [x] Example suggestion: "Deep Work Window - Block the next 90 minutes for your most challenging work"
+   - [x] Why it's helpful: Generated during high energy time slots based on observed patterns, with specific duration based on user's p90 focus duration
 
 ## Phase 5: Bootstrapping Flow (Estimated: 2-3 days)
 

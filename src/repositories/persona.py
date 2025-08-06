@@ -29,6 +29,10 @@ class PersonaRepository(BaseRepository[Persona]):
 
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+    
+    async def get_active_by_person(self, person_id: uuid.UUID) -> list[Persona]:
+        """Alias for get_active for consistency."""
+        return await self.get_active(person_id)
 
     async def get_active_by_mapper(
         self, person_id: uuid.UUID, mapper_id: str

@@ -16,7 +16,11 @@ dependencies = [
     "httpx>=0.25.2",
     "python-multipart>=0.0.6",
     "greenlet>=3.0.0",
+    "rich>=13.7.0",
 ]
+
+[project.scripts]
+persona-kit = "src.cli.main:main"
 
 [project.optional-dependencies]
 dev = [
