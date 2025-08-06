@@ -36,7 +36,7 @@ class Observation(Base):
         index=True,
     )
     type: Mapped[ObservationType] = mapped_column(
-        Enum(ObservationType, name="observation_type"),
+        Enum(ObservationType, name="observation_type", native_enum=False),
         nullable=False,
     )
     content: Mapped[dict[str, Any]] = mapped_column(

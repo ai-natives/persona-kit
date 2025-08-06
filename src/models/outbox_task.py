@@ -40,7 +40,7 @@ class OutboxTask(Base):
         nullable=False,
     )
     status: Mapped[TaskStatus] = mapped_column(
-        Enum(TaskStatus, name="task_status"),
+        Enum(TaskStatus, name="task_status", native_enum=False),
         nullable=False,
         default=TaskStatus.PENDING,
         server_default=text("'pending'"),
