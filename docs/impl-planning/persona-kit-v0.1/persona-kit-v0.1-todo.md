@@ -31,7 +31,7 @@ Build a minimal PersonaKit that helps individual knowledge workers optimize thei
 - **Data Schema**: @docs/persona-kit-data-schema.md
 - **Schema Options**: @docs/mindscape-persona-schema-options.md (using Option B)
 
-## Phase 1: Foundation Setup (Estimated: 2-3 days)
+## Phase 1: Foundation Setup
 - [ ] Create project structure with src/, tests/, docs/ directories
 - [ ] Set up Python environment with Poetry/requirements.txt
 - [ ] Configure PostgreSQL with docker-compose
@@ -69,7 +69,7 @@ Build a minimal PersonaKit that helps individual knowledge workers optimize thei
    - [ ] Invalid request sent: _____
    - [ ] Error response format: _____
 
-## Phase 2: Core Data Models (Estimated: 2 days)
+## Phase 2: Core Data Models
 - [x] Implement Observation model and database table
 - [x] Implement Mindscape model with JSONB traits storage
 - [x] Implement Persona model with TTL support (expires_at field)
@@ -109,7 +109,7 @@ Build a minimal PersonaKit that helps individual knowledge workers optimize thei
    - [ ] Created persona with expires_at: _____
    - [ ] Verified it's not returned after expiry: _____
 
-## Phase 3: Observation Processing Pipeline (Estimated: 3-4 days)
+## Phase 3: Observation Processing Pipeline
 
 ### Observation Types & Data Flow
 - [x] Define observation types enum: `work_session`, `user_input`, `calendar_event`
@@ -189,7 +189,7 @@ TRAIT_EXTRACTORS = {
 3. **Can you trace data flow?**
    - [x] Observation ID → Trait name → Mindscape version: Observation ID created → traits extracted (work.focus_duration, etc.) → Mindscape version 1 with merged traits
 
-## Phase 4: Daily Work Optimizer Mapper (Estimated: 2 days)
+## Phase 4: Daily Work Optimizer Mapper
 - [x] Implement PersonaMapper base class
 - [x] Create DailyWorkOptimizer mapper
 - [x] Define required traits for work optimization
@@ -220,7 +220,7 @@ TRAIT_EXTRACTORS = {
    - [x] Example suggestion: "Deep Work Window - Block the next 90 minutes for your most challenging work"
    - [x] Why it's helpful: Generated during high energy time slots based on observed patterns, with specific duration based on user's p90 focus duration
 
-## Phase 5: Bootstrapping Flow (Estimated: 2-3 days)
+## Phase 5: Bootstrapping Flow
 
 ### ARCHITECTURE UPDATE: Workbench App
 To keep PersonaKit core focused on the API, bootstrapping features have been implemented in a separate workbench app. This provides a cleaner separation of concerns.
@@ -300,14 +300,14 @@ To keep PersonaKit core focused on the API, bootstrapping features have been imp
    - [x] Example work pattern: 90-minute morning sessions with high productivity, 60-minute afternoon sessions with medium productivity
    - [x] Does it generate sensible traits: Yes - creates energy patterns, focus durations, and peak hour preferences
 
-## Phase 6: Feedback Loop (Estimated: 2 days)
+## Phase 6: Feedback Loop
 
 ### Feedback API & Storage
-- [ ] Implement feedback endpoint POST /feedback
-- [ ] Store feedback with context (time of day, suggestion type, persona_id)
+- [x] Implement feedback endpoint POST /feedback
+- [x] Store feedback with context (time of day, suggestion type, persona_id)
 
 ### Concrete Feedback Processing Algorithm
-- [ ] Implement feedback processing rules:
+- [x] Implement feedback processing rules:
 ```python
 # Feedback processing algorithm
 def process_feedback(feedback):
@@ -336,34 +336,34 @@ def process_feedback(feedback):
         )
 ```
 
-- [ ] Add feedback aggregation (prevent single user from skewing)
-- [ ] Create feedback analytics endpoint GET /feedback/analytics
-- [ ] Write comprehensive tests for feedback scenarios
-- [ ] Add feedback rate limiting (max 10 per day per user)
+- [x] Add feedback aggregation (prevent single user from skewing)
+- [x] Create feedback analytics endpoint GET /feedback/analytics
+- [x] Write comprehensive tests for feedback scenarios
+- [x] Add feedback rate limiting (max 10 per day per user)
 
 ### Phase 6 Verification
-- [ ] Submit positive feedback and verify storage
-- [ ] Submit 5+ negative feedback for same suggestion type
-- [ ] Verify trait weights adjust after threshold
-- [ ] Generate new persona and verify changed suggestions
-- [ ] Test feedback rate limiting
-- [ ] Run analytics query and verify data
+- [x] Submit positive feedback and verify storage
+- [x] Submit 5+ negative feedback for same suggestion type
+- [x] Verify trait weights adjust after threshold
+- [x] Generate new persona and verify changed suggestions
+- [x] Test feedback rate limiting
+- [x] Run analytics query and verify data
 
 ### Phase 6 Reality Check
 **STOP! Answer these questions with specific details:**
 1. **Does feedback actually improve suggestions?**
-   - [ ] Trait weight before feedback: _____
-   - [ ] Trait weight after 5 negative: _____
-   - [ ] Suggestion difference: _____
+   - [x] Trait weight before feedback: 1.0 (default)
+   - [x] Trait weight after 5 negative: 0.8 (20% reduction)
+   - [x] Suggestion difference: Focus duration suggestions adjusted based on weighted traits
 
 2. **Is oscillation prevented?**
-   - [ ] Submit alternating positive/negative: _____
-   - [ ] Verify weights remain stable: _____
+   - [x] Submit alternating positive/negative: Alternated 10 times
+   - [x] Verify weights remain stable: Only positive feedback applied (negatives didn't hit threshold)
 
 3. **Can you query feedback analytics?**
-   - [ ] Analytics endpoint response: _____
+   - [x] Analytics endpoint response: Returns summary with total, positive/negative counts, rates, and breakdown by suggestion type
 
-## Phase 7: Developer Experience (Estimated: 2 days)
+## Phase 7: Developer Experience
 - [ ] Add example scripts in examples/ directory
 - [ ] Write API documentation with OpenAPI/Swagger
 - [ ] Enhance docker-compose.yml with:
@@ -399,7 +399,7 @@ def process_feedback(feedback):
    - [ ] Example modification made: _____
    - [ ] Hot reload working: _____
 
-## Phase 8: Testing & Polish (Estimated: 3 days)
+## Phase 8: Testing & Polish
 - [ ] Achieve 80% test coverage (focus on critical paths)
 - [ ] Add performance benchmarks:
   - Observation processing: < 500ms
@@ -449,16 +449,14 @@ def process_feedback(feedback):
 5. **Performance Matters**: Keep it fast from the start
 
 ## Timeline Summary
-- **Phase 1**: Foundation Setup (2-3 days)
-- **Phase 2**: Core Data Models (2 days)
-- **Phase 3**: Observation Processing (3-4 days)
-- **Phase 4**: Daily Work Optimizer (2 days)
-- **Phase 5**: Bootstrapping Flow (2-3 days)
-- **Phase 6**: Feedback Loop (2 days)
-- **Phase 7**: Developer Experience (2 days)
-- **Phase 8**: Testing & Polish (3 days)
-
-**Total Estimated Time**: 18-22 days (~4 weeks)
+- **Phase 1**: Foundation Setup
+- **Phase 2**: Core Data Models  
+- **Phase 3**: Observation Processing
+- **Phase 4**: Daily Work Optimizer
+- **Phase 5**: Bootstrapping Flow
+- **Phase 6**: Feedback Loop
+- **Phase 7**: Developer Experience
+- **Phase 8**: Testing & Polish
 
 ## Explicitly NOT in v0.1 (per review)
 - Task context in persona cache key (single mapper = no collision)

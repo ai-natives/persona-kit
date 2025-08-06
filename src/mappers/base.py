@@ -110,9 +110,10 @@ class PersonaMapper(ABC):
         self, mindscape: Mindscape, trait_name: str, default: Any = None
     ) -> Any:
         """
-        Extract trait value from mindscape.
+        Extract trait value from mindscape, considering weight adjustments.
 
-        Handles the nested structure of traits with confidence/value.
+        Handles the nested structure of traits with confidence/value and
+        applies weight adjustments from feedback processing.
 
         Args:
             mindscape: Source mindscape
@@ -120,7 +121,7 @@ class PersonaMapper(ABC):
             default: Default value if trait not found
 
         Returns:
-            The trait value or default
+            The trait value (potentially adjusted by weight) or default
         """
         if not mindscape.traits or trait_name not in mindscape.traits:
             return default
@@ -128,8 +129,51 @@ class PersonaMapper(ABC):
         trait_data = mindscape.traits[trait_name]
 
         # Handle trait structures with value/confidence
-        if isinstance(trait_data, dict) and "value" in trait_data:
-            return trait_data["value"]
-
-        # Direct value
+        if isinstance(trait_data, dict):
+            value = trait_data.get("value", default)
+            weight = trait_data.get("weight", 1.0)
+            
+            # Apply weight adjustments for numeric values
+            if isinstance(value, (int, float)) and weight != 1.0:
+                # For reduced weight (< 1.0), move toward neutral
+                if weight < 1.0:
+                    # Assume neutral is middle of reasonable range
+                    if trait_name.endswith("_duration") or trait_name.endswith("_minutes"):
+                        neutral = 60  # 60 minutes as neutral duration
+                    elif trait_name.endswith("_score") or trait_name.endswith("_level"):
+                        neutral = 3  # Middle of 1-5 scale
+                    else:
+                        neutral = 50  # Generic neutral value
+                    
+                    # Blend toward neutral based on weight
+                    value = value * weight + neutral * (1 - weight)
+                else:
+                    # For increased weight (> 1.0), amplify value
+                    # But cap at reasonable limits
+                    value = min(value * weight, value * 2)
+            
+            # Handle complex trait structures (like focus_duration with p50, p90)
+            elif isinstance(value, dict) and weight != 1.0:
+                # Apply weight to numeric fields in the structure
+                adjusted_value = {}
+                for k, v in value.items():
+                    if isinstance(v, (int, float)):
+                        if weight < 1.0:
+                            # Determine neutral value based on field name
+                            if "duration" in k.lower() or "minutes" in k.lower():
+                                neutral = 60
+                            elif k.startswith("p") and k[1:].isdigit():  # Percentiles like p50, p90
+                                neutral = 60
+                            else:
+                                neutral = v  # Keep original if unsure
+                            adjusted_value[k] = v * weight + neutral * (1 - weight)
+                        else:
+                            adjusted_value[k] = min(v * weight, v * 2)
+                    else:
+                        adjusted_value[k] = v  # Keep non-numeric values unchanged
+                return adjusted_value
+            
+            return value
+        
+        # Direct value (legacy support)
         return trait_data
