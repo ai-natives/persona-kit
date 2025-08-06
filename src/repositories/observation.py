@@ -25,12 +25,12 @@ class ObservationRepository(BaseRepository[Observation]):
     ) -> list[Observation]:
         """Get observations for a specific person."""
         stmt = select(Observation).where(Observation.person_id == person_id)
-        
+
         if observation_type:
             stmt = stmt.where(Observation.type == observation_type)
-        
+
         stmt = stmt.order_by(Observation.created_at.desc()).limit(limit).offset(offset)
-        
+
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
@@ -42,34 +42,34 @@ class ObservationRepository(BaseRepository[Observation]):
     ) -> list[Observation]:
         """Get recent observations within specified days."""
         cutoff = datetime.now(UTC) - timedelta(days=days)
-        
+
         stmt = select(Observation).where(
             and_(
                 Observation.person_id == person_id,
                 Observation.created_at >= cutoff,
             )
         )
-        
+
         if observation_type:
             stmt = stmt.where(Observation.type == observation_type)
-        
+
         stmt = stmt.order_by(Observation.created_at.desc())
-        
+
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
     async def delete_old_observations(self, days: int = 90) -> int:
         """Delete observations older than specified days."""
         cutoff = datetime.now(UTC) - timedelta(days=days)
-        
+
         stmt = select(Observation).where(Observation.created_at < cutoff)
         result = await self.session.execute(stmt)
         old_observations = result.scalars().all()
-        
+
         count = 0
         for obs in old_observations:
             await self.session.delete(obs)
             count += 1
-        
+
         await self.session.commit()
         return count

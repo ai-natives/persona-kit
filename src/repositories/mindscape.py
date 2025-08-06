@@ -33,7 +33,7 @@ class MindscapeRepository(BaseRepository[Mindscape]):
             traits=traits,
             version=1,
         )
-        
+
         # On conflict, update traits and increment version
         stmt = stmt.on_conflict_do_update(
             index_elements=["person_id"],
@@ -43,10 +43,10 @@ class MindscapeRepository(BaseRepository[Mindscape]):
                 "updated_at": sa.func.now(),
             },
         )
-        
+
         await self.session.execute(stmt)
         await self.session.commit()
-        
+
         # Fetch the updated record with fresh session state
         mindscape = await self.get_by_person(person_id)
         if mindscape:
@@ -60,12 +60,12 @@ class MindscapeRepository(BaseRepository[Mindscape]):
         mindscape = await self.get_by_person(person_id)
         if not mindscape:
             return None
-        
+
         # Merge trait updates with existing traits
         updated_traits = {**mindscape.traits, **trait_updates}
         mindscape.traits = updated_traits
         mindscape.version += 1
-        
+
         await self.session.commit()
         await self.session.refresh(mindscape)
         return mindscape

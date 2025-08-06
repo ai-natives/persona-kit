@@ -1,6 +1,7 @@
 """Repository for Feedback model operations."""
 import uuid
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,7 +28,7 @@ class FeedbackRepository(BaseRepository[Feedback]):
             .limit(limit)
             .offset(offset)
         )
-        
+
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
@@ -36,16 +37,16 @@ class FeedbackRepository(BaseRepository[Feedback]):
     ) -> list[Feedback]:
         """Get recent negative feedback for a persona."""
         cutoff = datetime.now(UTC) - timedelta(days=days)
-        
+
         stmt = select(Feedback).where(
             and_(
                 Feedback.persona_id == persona_id,
                 Feedback.created_at >= cutoff,
                 # Negative feedback: rating <= 2 or helpful = False
-                (Feedback.rating <= 2) | (Feedback.helpful == False),
+                (Feedback.rating <= 2) | (Feedback.helpful.is_(False)),
             )
         ).order_by(Feedback.created_at.desc())
-        
+
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
@@ -54,19 +55,19 @@ class FeedbackRepository(BaseRepository[Feedback]):
     ) -> int:
         """Count negative feedback for a persona within specified days."""
         cutoff = datetime.now(UTC) - timedelta(days=days)
-        
+
         stmt = select(func.count(Feedback.id)).where(
             and_(
                 Feedback.persona_id == persona_id,
                 Feedback.created_at >= cutoff,
-                (Feedback.rating <= 2) | (Feedback.helpful == False),
+                (Feedback.rating <= 2) | (Feedback.helpful.is_(False)),
             )
         )
-        
+
         result = await self.session.execute(stmt)
         return result.scalar() or 0
 
-    async def get_feedback_stats(self, persona_id: uuid.UUID) -> dict:
+    async def get_feedback_stats(self, persona_id: uuid.UUID) -> dict[str, Any]:
         """Get feedback statistics for a persona."""
         # Average rating
         avg_stmt = select(func.avg(Feedback.rating)).where(
@@ -77,20 +78,20 @@ class FeedbackRepository(BaseRepository[Feedback]):
         )
         avg_result = await self.session.execute(avg_stmt)
         avg_rating = avg_result.scalar()
-        
+
         # Helpful percentage
         helpful_stmt = select(
-            func.count(Feedback.id).filter(Feedback.helpful == True),
+            func.count(Feedback.id).filter(Feedback.helpful.is_(True)),
             func.count(Feedback.id).filter(Feedback.helpful.is_not(None)),
         ).where(Feedback.persona_id == persona_id)
-        
+
         helpful_result = await self.session.execute(helpful_stmt)
         helpful_count, total_helpful = helpful_result.one()
-        
+
         helpful_percentage = (
             (helpful_count / total_helpful * 100) if total_helpful > 0 else None
         )
-        
+
         return {
             "average_rating": float(avg_rating) if avg_rating else None,
             "helpful_percentage": helpful_percentage,
