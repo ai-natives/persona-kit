@@ -1,8 +1,19 @@
 ## **1. Core Mission & Philosophy**
 
-**PersonaKit** is a service for enabling AI systems to deeply understand and model specific human individuals for complex collaborative and coaching workflows.
+**PersonaKit** enables agents to embody specific real people. It provides controllable degrees of fidelity for role-playing, allowing agents to be more effective in training, analysis, support, and simulation scenarios.
 
-Its purpose is to move beyond generic roles and model an individual’s unique preferences, communication style, motivations, and work patterns. This allows AI and human collaborators to interact with greater effectiveness, precision, and empathy.
+### **Important: What PersonaKit Actually Creates**
+
+PersonaKit creates **useful approximations** of people, not realistic simulations. Humans have ~2.5 petabytes of experiential memory and thousands of unique factors shaping behavior. PersonaKit captures a tiny fraction of this complexity - just enough to be useful for specific purposes.
+
+Think of PersonaKit personas as "good-enough mental models" rather than accurate representations. The fidelity control (0.0-1.0) represents how much detail to include, not how "realistic" the persona is.
+
+Agents integrated with PersonaKit can:
+- Initialize with or adopt personas of specific individuals (colleagues, managers, customers)
+- Adjust fidelity based on use case needs
+- Maintain behavioral consistency with the modeled person
+- Switch between personas as needed
+- Operate with or without personas based on their design
 
 ## **2. The Core Architectural Concepts**
 
@@ -14,7 +25,7 @@ The system is built on a strict separation of concerns between key entities:
 * **Persona (The Map):** A durable, context-specific reference model of an individual. It is composed of two parts to balance performance and freshness:  
   * **Persona Core:** A pre-computed, cached foundation containing low-volatility, foundational traits (e.g., core beliefs, communication style). This is the system's "materialized view."  
   * **Contextual Overlay:** A lightweight, dynamically-fetched layer containing high-volatility, just-in-time information (e.g., current availability, recent sentiment).  
-* **Actor (The Traveler):** An external agent that **takes on** a Persona to inform its actions. The Actor uses the Persona as its map to navigate a task and **can optionally provide** feedback on the map's accuracy.
+* **Agent:** An AI system (LangChain agent, AutoGen assistant, custom chatbot, etc.) that can **adopt or initialize with** a Persona to role-play as a specific person. The agent uses the Persona to guide its behavior, with flexibility to maintain it persistently or change personas based on the use case.
 
 ## **3. The Persona Lifecycle & System Flow**
 
@@ -30,23 +41,23 @@ The framework operates in a continuous cycle of data ingestion, analysis, and sy
 
 ### **Phase 2: Persona Mapping (Generating the Persona)**
 
-* **Goal:** To assemble the right "map" for the specific "journey" an Actor is about to undertake.  
-* **Process:** This on-demand process is triggered by an API call from an Actor.  
-  * GET /map-persona?mapperId=...\&personaId=...\&detailLevel=...  
+* **Goal:** To generate role-playing guidance that enables agents to embody specific people.  
+* **Process:** This on-demand process is triggered by an API call from an agent.  
+  * GET /map-persona?mapperId=...&personaId=...&detailLevel=...  
 * **Key Components:**  
-  1. **The Persona Mapper:** The Actor specifies which mapper to use.  
-  2. **Detail Levels (User Budget Control):** The Actor selects a level (Instant, Balanced, Deep Dive).  
+  1. **The Persona Mapper:** The agent specifies which mapper to use (e.g., colleague-simulation, manager-review, customer-archetype).  
+  2. **Detail Levels (Fidelity Control):** The agent selects a level (Instant, Balanced, Deep Dive).  
   3. **Hybrid Retrieval Pipeline:**  
      * The system retrieves the cached **Persona Core**. If it's stale (based on significant changes to low-volatility data), it can be rebuilt according to the selected Detail Level.  
      * The system performs a fast, dynamic query to fetch the **Contextual Overlay** from the high-volatility data in the Mindscape.  
-     * The Core and Overlay are combined into a single Persona object and returned to the Actor.
+     * The Core and Overlay are combined into a single Persona object and returned to the agent.
 
 ### **Phase 3: The Feedback Loop (Improving Mapper Configurations)**
 
 * **Goal:** To enable the service to learn from real-world outcomes, making the mapper configurations more accurate over time.  
 * **Process:**  
-  1. **Action & Observation:** An Actor uses a generated Persona to perform a task.  
-  2. **Submit Feedback:** The Actor (or a human supervisor) submits feedback via the POST /feedback endpoint.  
+  1. **Action & Observation:** An agent uses a generated Persona to role-play as a specific person.  
+  2. **Submit Feedback:** The agent (or a human supervisor) submits feedback via the POST /feedback endpoint about the accuracy of the role-play.  
   3. **Asynchronous Refinement:** A background **Configuration Adjuster** analyzes feedback associated with specific rules in the Persona Mapper configuration.  
   4. **Automatic Weight Adjustment:** The system adjusts rule weights and thresholds in the mapper configuration based on feedback patterns, creating a new version of the configuration automatically.
 

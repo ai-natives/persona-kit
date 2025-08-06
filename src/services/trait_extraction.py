@@ -142,7 +142,7 @@ class TraitExtractor:
                     "confidence": 0.8,
                     "sample_size": 1,
                 }
-                traits["productivity.peak_hours"] = {
+                traits["work.peak_hours"] = {
                     "value": time_ranges,
                     "confidence": 0.8,
                     "sample_size": 1,

@@ -1,366 +1,333 @@
 # PersonaKit Implementation Guide
 
+## Strategic Vision: Human Modeling for Role-Playing Agents
+
+PersonaKit enables agents to **temporarily embody specific real people** for training, simulation, and practice scenarios.
+
+### Core Value Propositions
+
+**For Agent Developers:**
+- Working mental models of people for role-playing scenarios
+- Controllable fidelity levels (basic traits to richer approximations)
+- Behavioral consistency during embodiment  
+- Self-improving models through feedback
+
+**For End Users:**
+- Practice with AI versions of real colleagues/managers
+- Train against useful approximations of customer personas
+- Prepare for interviews with company-specific interviewers
+- Get advice from AI that thinks like specific people
+
+### What PersonaKit Provides
+
+1. **Human Modeling System**: Extract and model behavioral patterns of real people
+2. **Persona Generation**: Create role-playing personas with adjustable fidelity
+3. **Flexible Usage Patterns**: Agents can be initialized with personas or adopt them dynamically
+4. **Continuous Learning**: Personas improve as new observations arrive
+
 ## Table of Contents
-1. [Core Principle: Task-Driven Personas](#core-principle-task-driven-personas)
+1. [Core Principle: Role-Playing Personas](#core-principle-role-playing-personas)
 2. [Use Case Analysis](#use-case-analysis)
 3. [The Pruning Process](#the-pruning-process)
 4. [Mapper Specifications](#mapper-specifications)
 5. [Implementation Plan](#implementation-plan)
 6. [Testing Strategy](#testing-strategy)
 
-## Core Principle: Task-Driven Personas
+## Core Principle: Role-Playing Personas
 
-### Fundamental Constraint: Personas Exist Only in Task Context
+### Fundamental Purpose: Agents That Embody Real People
 
-**A Persona without a task is meaningless.** This isn't a design choice - it's a fundamental constraint. Here's why:
+PersonaKit exists for a specific purpose: **enabling agents to act as specific real people**. This isn't general personalization - it's human simulation for specialized use cases.
 
-1. **Mindscapes are vast**: A complete model of a person contains thousands of traits, experiences, preferences, patterns, and relationships
-2. **Tasks require focus**: Any specific task only needs a tiny subset of that information
-3. **Wrong information is harmful**: Including irrelevant traits adds noise and degrades performance
-4. **Context determines relevance**: The same trait might be critical for one task and irrelevant for another
+Key distinctions:
+1. **Flexible embodiment**: Agents can be initialized with personas or adopt them dynamically
+2. **Real people modeling**: Based on actual individuals, not archetypes
+3. **Controllable realism**: Fidelity adjusts based on use case needs
+4. **Usage flexibility**: Support for persistent personas, switching, or no persona
 
-### The Persona Mapper's True Role
+### The Persona Mapper's Role in Role-Playing
 
-The Persona Mapper is a **configuration-driven, task-aware selection system** that:
-- Evaluates declarative rules to determine what information is relevant
-- Applies weighted conditions based on feedback-adjusted configurations
-- Generates suggestions using template-based actions
-- Evolves automatically as rule weights are adjusted by user feedback
-
-Mappers are YAML/JSON configurations, not code, allowing domain experts to create and modify them without programming.
+The Persona Mapper determines **how to construct a persona for role-playing**:
+- Selects relevant traits for the specific role-play scenario
+- Adjusts detail level based on requested fidelity
+- Includes behavioral patterns, communication style, knowledge
+- Evolves based on feedback about role-play accuracy
 
 ## Use Case Analysis
 
-### 1. English Learning Coaching App
+### 1. English Learning with Real Colleagues
 
-**System Overview**: An app that helps users practice English for specific workplace scenarios by simulating conversations with realistic personas of actual colleagues, clients, or managers.
+**System Overview**: Practice English by having conversations with AI versions of actual colleagues, preparing for real workplace interactions.
 
-**PersonaKit Integration**:
-- **Observations**: Email/chat samples, meeting recordings, communication style notes
-- **Mappers**: Communication Partner Mapper, Meeting Communication Partner
-- **Scale**: 20-50+ personas per user (entire professional network)
-- **Update Frequency**: Weekly
-- **Detail Level**: Deep Dive for accurate simulation
+**Role-Playing Requirements**:
+- **Personas**: 20-50 actual colleagues per user
+- **Fidelity**: High (0.8-0.9) - must feel like the real person
+- **Observations**: Email samples, chat logs, meeting recordings
+- **Key Traits**: Communication patterns, typical phrases, formality level
+- **Feedback**: "Did this feel like talking to the real person?"
 
-**Key Requirements**:
-- Focus on stable communication patterns over volatile traits
-- Need language patterns, formality levels, cultural context
-- Feedback: "Did the simulated conversation feel authentic?"
+**Agent Behavior**:
+```python
+# Agent embodies specific colleague
+colleague = personakit.get_persona("john_from_engineering", fidelity=0.85)
+agent.adopt_persona(colleague)
 
-### 2. Marketing Strategy Testing App
+# Conversation uses John's actual patterns
+agent.chat("Can you explain the deployment process?")
+# Response in John's style, with his knowledge
 
-**System Overview**: An app that tests marketing campaigns against panels of synthetic target audience members based on real customer data.
+agent.release_persona()
+```
 
-**PersonaKit Integration**:
-- **Observations**: CRM data, surveys, behavioral analytics (often aggregated)
-- **Mappers**: Consumer Purchase Decision Maker, Marketing Message Evaluator
-- **Scale**: 100s of personas for panel diversity
-- **Update Frequency**: Monthly
-- **Detail Level**: Balanced (cost-effective for large panels)
+### 2. Interview Prep with Company Interviewers
 
-**Key Requirements**:
-- Focus on consumer behavior and decision patterns
-- Need buying motivations, brand perceptions, media preferences
-- Privacy considerations for aggregated data
-- Feedback: "Did panel predictions match real campaign results?"
+**System Overview**: Practice interviews with AI versions of typical interviewers from target companies.
 
-### 3. Knowledge Work Assistant
+**Role-Playing Requirements**:
+- **Personas**: Various interviewer archetypes per company
+- **Fidelity**: Medium-High (0.6-0.8) - realistic but not specific individuals
+- **Observations**: Interview feedback, company culture docs, Glassdoor data
+- **Key Traits**: Question style, evaluation criteria, company values
+- **Feedback**: "Were the questions representative of this company?"
 
-**System Overview**: An AI assistant that helps knowledge workers by understanding their work style and modeling stakeholders for tasks like review preparation.
+**Agent Behavior**:
+```python
+# Agent becomes a Google behavioral interviewer
+interviewer = personakit.get_persona("google_behavioral_interviewer", fidelity=0.7)
+agent.adopt_persona(interviewer)
 
-**PersonaKit Integration**:
-- **Observations**: Work artifacts, communication logs, productivity metrics
-- **Mappers**: Daily Work Optimizer (self), Stakeholder Review Simulator (others)
-- **Scale**: 1 primary user + multiple stakeholder personas
-- **Update Frequency**: Daily/Hourly for user, weekly for stakeholders
-- **Detail Level**: Instant for user (frequent checks), Balanced for stakeholders
+# Conducts interview in Google style
+agent.conduct_behavioral_round()
 
-**Key Requirements**:
-- Real-time overlay updates for current state
-- High-frequency persona access throughout the day
-- Feedback: "Did suggestions match your needs?" / "Was review prediction accurate?"
+agent.release_persona()
+# Returns to coaching mode to give feedback
+```
+
+### 3. Manager Review Preparation
+
+**System Overview**: Prepare for performance reviews by practicing with an AI version of your actual manager.
+
+**Role-Playing Requirements**:
+- **Personas**: User's specific manager
+- **Fidelity**: High (0.8-0.9) - must capture manager's style
+- **Observations**: Past review comments, email exchanges, 1:1 notes
+- **Key Traits**: Feedback style, priorities, communication patterns
+- **Feedback**: "Did this match how my manager would respond?"
+
+### 4. Sales Training with Customer Personas
+
+**System Overview**: Practice sales pitches against AI versions of typical customer profiles.
+
+**Role-Playing Requirements**:
+- **Personas**: 50-100 customer archetypes
+- **Fidelity**: Medium (0.5-0.7) - representative behaviors
+- **Observations**: CRM data, sales call transcripts, objection patterns
+- **Key Traits**: Buying concerns, objection style, decision criteria
+- **Feedback**: "Were the objections realistic for this customer type?"
 
 ### Comparison Matrix
 
-| Aspect | English Coaching | Marketing Testing | Work Assistant |
-|--------|------------------|-------------------|----------------|
-| **Persona Count** | Many (20-50+ people) | Many (100s) | Mixed (1 primary + stakeholders) |
-| **Update Frequency** | Weekly | Monthly | Daily/Hourly |
-| **Detail Level** | Deep Dive | Balanced | Instant (user) / Balanced (others) |
-| **Data Sensitivity** | High (personal) | Medium (aggregated) | High (personal + work) |
-| **Volatility Focus** | Low (stable patterns) | Medium | High (current state) |
-| **Primary Traits** | Communication style | Consumer behavior | Work patterns & preferences |
+| Aspect | English Practice | Interview Prep | Manager Review | Sales Training |
+|--------|------------------|----------------|----------------|----------------|
+| **Embodiment Type** | Specific people | Company archetypes | Specific person | Customer types |
+| **Fidelity Needed** | High (0.8-0.9) | Medium-High (0.6-0.8) | High (0.8-0.9) | Medium (0.5-0.7) |
+| **Persona Count** | 20-50 colleagues | 5-10 per company | 1 manager | 50-100 customers |
+| **Update Frequency** | Weekly | Monthly | Weekly | Monthly |
+| **Privacy Sensitivity** | Very High | Medium | Very High | Medium |
 
 ## The Pruning Process
 
-### The Scale Challenge
+### The Challenge: Full People vs. Specific Scenarios
 
-A complete Mindscape might contain:
-- 500+ distinct traits
-- 1000+ experiences and memories
-- 100+ relationships
-- 50+ skills and competencies
-- 200+ preferences and opinions
+A complete model of a person contains thousands of traits, but role-playing scenarios need focus:
+- **Full Mindscape**: 500+ traits, 1000+ experiences, 100+ relationships
+- **Interview Scenario**: 20-30 relevant traits (question style, evaluation approach)
+- **Colleague Chat**: 15-20 traits (communication style, shared context)
 
-For a single task, we need only 10-20 data points.
+### The Selection Pipeline
 
-### The Pruning Pipeline
-
-#### Step 1: Task Context Analysis
+#### Step 1: Scenario Analysis
 ```python
-def analyze_task_context(request):
-    task_type = request.task_type  # "email_composition"
-    scenario = request.scenario     # "request_deadline_extension"
+def analyze_role_play_scenario(request):
+    scenario_type = request.scenario  # "technical_interview"
+    person_role = request.role       # "senior_engineer_interviewer"
+    fidelity = request.fidelity      # 0.8
     
-    # Determine required trait categories
-    required_categories = TASK_TRAIT_MAP[task_type]
-    scenario_traits = SCENARIO_MODIFIERS[scenario]
+    # Determine trait categories needed
+    required_traits = SCENARIO_TRAIT_MAP[scenario_type]
+    fidelity_traits = FIDELITY_LEVELS[fidelity]
     
-    return TraitSelector(required_categories + scenario_traits)
+    return TraitSelector(required_traits, fidelity_traits)
 ```
 
-#### Step 2: Multi-Level Filtering
+#### Step 2: Trait Filtering
 ```python
-def prune_mindscape(mindscape, trait_selector, task_context):
-    # Level 1: Category filtering (1000s → 100s)
-    filtered = mindscape.filter_by_categories(relevant_categories)
+def select_persona_traits(mindscape, selector, context):
+    # Start with core identity traits
+    traits = {
+        "identity": mindscape.get_core_identity(),
+        "communication": mindscape.get_communication_style()
+    }
     
-    # Level 2: Relevance scoring (100s → 10s)
-    scored_traits = apply_relevance_threshold(filtered, task_context)
+    # Add scenario-specific traits
+    if selector.needs_technical_knowledge:
+        traits["expertise"] = mindscape.get_expertise_areas()
     
-    # Level 3: Dependency resolution
-    final_traits = resolve_dependencies(scored_traits)
+    if selector.needs_behavioral_patterns:
+        traits["behaviors"] = mindscape.get_behavioral_patterns()
     
-    return final_traits
+    # Apply fidelity level
+    return apply_fidelity_filter(traits, selector.fidelity)
 ```
 
-#### Step 3: Contextual Overlay
-Apply current state adjustments:
-- High-volatility trait updates
-- Temporal modifiers (time of day, day of week)
-- Recent event impacts
-
-### Concrete Example: Email to Sarah
-
-**Before Pruning**: 500+ traits including hobbies, family info, technical skills, health data...
-
-**Task Context**: "Write email requesting deadline extension"
-
-**After Pruning**: 10-15 relevant traits:
-- `communication.written.formality`: "high"
-- `work.deadline_flexibility`: "low" (Critical!)
-- `values.advance_notice`: "high" (Critical!)
-- `values.data_driven`: "very_high"
-- Plus derived email guidance
+#### Step 3: Contextual Adaptation
+```python
+def add_contextual_overlay(persona_core, context):
+    overlay = {}
+    
+    # Current state modifiers
+    if context.time_of_day in persona_core.high_energy_times:
+        overlay["energy_modifier"] = "high_energy"
+    
+    # Relationship context
+    if context.relationship_history:
+        overlay["shared_context"] = extract_shared_history(context)
+    
+    return PersonaWithOverlay(persona_core, overlay)
+```
 
 ## Mapper Specifications
 
-### English Coaching Mappers
+### Example: Colleague Conversation Partner
 
-#### Workplace Email Composer
-```typescript
-{
-  mapperId: "workplace-email-composer-v1",
-  taskContext: {
-    scenarios: ["request_something", "provide_update", "share_bad_news"]
-  },
-  pruningRules: {
-    mustInclude: [
-      "communication.email.*",
-      "values.punctuality",
-      "relationship.power_dynamic"
-    ],
-    mustExclude: ["personal.*", "technical.*", "hobbies.*"],
-    conditionalInclude: [
-      {
-        condition: "scenario == 'request_something'",
-        include: ["values.reciprocity", "work.deadline_flexibility"]
-      }
-    ]
-  }
-}
+```yaml
+metadata:
+  id: colleague-conversation-v1
+  name: "Colleague Conversation Partner"
+  description: "Role-play as specific colleague for English practice"
+  use_case: "language_training"
+  
+required_traits:
+  - identity.name
+  - identity.role
+  - communication.formality
+  - communication.common_phrases
+  - work.expertise_areas
+  
+fidelity_levels:
+  low:
+    traits: [identity, basic_communication]
+    description: "Name, role, and general style"
+  medium:
+    traits: [identity, communication, expertise]
+    description: "Above plus knowledge areas"
+  high:
+    traits: [identity, communication, expertise, mannerisms, humor]
+    description: "Full personality including quirks"
+
+rules:
+  - id: technical_colleague
+    conditions:
+      all:
+        - trait: identity.department
+          equals: engineering
+    actions:
+      - include_trait:
+          name: technical.jargon_usage
+          importance: high
+      - include_trait:
+          name: communication.code_examples
+          importance: medium
+          
+  - id: casual_friday
+    conditions:
+      all:
+        - context: day_of_week
+          equals: friday
+    actions:
+      - modify_trait:
+          name: communication.formality
+          adjustment: decrease_20_percent
 ```
 
-### Marketing Testing Mappers
+### Example: Interview Persona
 
-#### Consumer Purchase Decision Maker
-```typescript
-{
-  mapperId: "consumer-purchase-decision-v1",
-  taskContext: {
-    productCategories: ["eco_friendly", "premium_luxury", "value_budget"]
-  },
-  pruningRules: {
-    mustInclude: [
-      "consumer.price_sensitivity",
-      "consumer.purchase_triggers",
-      "values.environmental"
-    ],
-    mustExclude: ["work.*", "communication.workplace.*"],
-    conditionalInclude: [
-      {
-        condition: "category == 'eco_friendly'",
-        include: ["consumer.greenwashing_sensitivity"]
-      }
-    ]
-  },
-  aggregationRules: {
-    panelSize: { minimum: 10, optimal: 25, maximum: 50 }
-  }
-}
-```
+```yaml
+metadata:
+  id: company-interviewer-v1
+  name: "Company Interviewer"
+  description: "Role-play as interviewer from specific company"
+  use_case: "interview_preparation"
+  
+required_traits:
+  - company.values
+  - interview.question_style
+  - interview.evaluation_criteria
+  - communication.formality
+  
+fidelity_levels:
+  low:
+    traits: [company_values, basic_questions]
+  medium:
+    traits: [company_values, question_style, evaluation_approach]
+  high:
+    traits: [all_traits_plus_personality]
 
-### Work Assistant Mappers
-
-#### Daily Work Optimizer
-```typescript
-{
-  mapperId: "daily-work-optimizer-v1",
-  taskContext: {
-    timeHorizon: "today",
-    adaptiveTo: ["energy", "calendar", "priorities"]
-  },
-  pruningRules: {
-    mustInclude: [
-      "work.energy_patterns",
-      "current_state.energy_level",
-      "productivity.peak_hours"
-    ],
-    mustExclude: ["personal.family.*", "consumer.*"]
-  },
-  realTimeOverlay: {
-    refreshInterval: "hourly",
-    signals: ["calendar_density", "completion_momentum"]
-  }
-}
+behavioral_templates:
+  behavioral_question:
+    pattern: "Tell me about a time when {situation}"
+    follow_up: "What would you do differently?"
+    evaluation: ["STAR_method", "specific_examples", "learning_demonstrated"]
 ```
 
 ## Implementation Plan
 
-### Phase 1: Foundation
-**Goal**: Basic PersonaKit that can ingest observations and generate simple personas
+### Phase 1: Core Infrastructure (Weeks 1-2)
+- Database schema for personas and observations
+- Basic REST API for persona management
+- Simple mapper configuration system
+- Adopt/release pattern implementation
 
-**Storage Architecture Decision**:
-Based on the analysis in `mindscape-persona-schema-options.md`, we recommend:
-- **Start with Option B (PostgreSQL + JSONB)** for MVP
-- Provides ACID guarantees and familiar SQL tooling
-- Supports future migration to Option D (Polyglot) when scale demands it
-- See architectural options document for full trade-off analysis
+### Phase 2: English Practice App Integration (Weeks 3-4)
+- Colleague persona mapper
+- High-fidelity trait extraction
+- Conversation simulation features
+- Feedback collection system
 
-**Technology Stack**:
-```yaml
-Database: PostgreSQL 15+ with pgvector
-API: REST (not GraphQL initially)
-Background Jobs: Redis + BullMQ
-Caching: Redis for Persona cores
-Language: TypeScript/Node.js or Python/FastAPI
-```
+### Phase 3: Interview Prep Features (Weeks 5-6)
+- Company interviewer personas
+- Question bank integration
+- Interview simulation workflows
+- Accuracy feedback loops
 
-**Core Components**:
-- Observation API (create, approve)
-- Basic Mindscaper (simple trait extraction)
-- Simple Persona Generator
-- One general-purpose Mapper
-
-### Phase 2: Use Case MVP
-**Goal**: Support Work Assistant use case end-to-end
-
-Starting with Work Assistant because:
-- Most frequent API usage (surfaces issues quickly)
-- Single user focus (simpler than panels)
-- Clear feedback loop
-
-**Deliverables**:
-1. Work Style Mapper
-2. Real-time overlay support
-3. Feedback API
-4. Simple CLI/SDK for testing
-
-### Phase 3: Multi-Use Case Support
-
-Add remaining use cases in parallel:
-- **English Coaching**: Communication Partner Mapper, language pattern analysis
-- **Marketing Testing**: Target Audience Mapper, bulk generation, panel aggregation
-
-### Phase 4: Production Readiness
-
-**Scalability**:
-- Add caching layer
-- Implement proper queuing
-- Add vector search for traits
-
-**Robustness**:
-- Add sync protocol
-- Implement versioning
-- Add monitoring/observability
+### Phase 4: Expansion (Weeks 7-8)
+- Manager review personas
+- Sales training customers
+- Performance optimization
+- Privacy controls
 
 ## Testing Strategy
 
-### Synthetic Test Data Requirements
+### 1. Fidelity Testing
+- Compare AI responses to real person samples
+- Measure trait consistency across interactions
+- Validate behavioral patterns match observations
 
-#### English Coaching
-- 30-50 fake workplace contacts:
-  - 5-10 immediate team members
-  - 10-15 cross-functional colleagues
-  - 5-10 senior managers
-  - 5-10 external clients/partners
-  - 5-10 international colleagues
+### 2. Role-Play Effectiveness
+- User studies: "Was this useful for your practice/training?"
+- A/B testing different fidelity levels for utility
+- Scenario-specific usefulness metrics
 
-#### Marketing Testing
-- 100 fake customers
-- 3 distinct segments
-- Purchase history and survey data
+### 3. Privacy & Consent
+- Audit trail for all persona access
+- Consent verification workflows
+- Data minimization validation
 
-#### Work Assistant
-- 1 primary user with 30 days of work artifacts
-- 3-5 stakeholder reviewers with feedback history
+### 4. Integration Testing
+- Agent framework compatibility
+- Adopt/release lifecycle validation
+- Performance under concurrent personas
 
-### Success Metrics
-- Persona generation time: <2s (Instant), <10s (Balanced), <30s (Deep Dive)
-- Feedback incorporation improves accuracy by >10%
-- System handles 100 concurrent persona requests
-- Storage grows linearly with observations
+## Summary
 
-## Implementation Sequence
-
-### Immediate Actions
-1. Set up PostgreSQL with JSONB
-2. Create REST API scaffold
-3. Implement Observation ingestion
-4. Build simple Mindscaper
-5. Create Work Style Mapper
-6. Implement Persona generation
-7. Add feedback collection
-8. Generate synthetic test data
-9. Run end-to-end tests
-10. Iterate based on results
-
-### Parallel Workstreams
-- **Stream 1**: Add remaining mappers
-- **Stream 2**: Performance optimizations
-- **Stream 3**: Build SDKs for each use case
-- **Stream 4**: Monitoring and observability
-
-## Critical Design Decisions
-
-1. **Mappers Are Not Generic**: Each mapper is designed for specific task categories
-2. **Task Context Is Mandatory**: Every persona request must include task context
-3. **Caching Is Task-Aware**: Same person needs different personas for different tasks
-4. **Success = Task Completion**: Not "accurate persona" but "effective task outcome"
-
-## Migration Paths
-
-As outlined in `mindscape-persona-schema-options.md`, starting with Option B (PostgreSQL + JSONB) provides flexibility:
-
-- **To Option A (Document DB)**: If you need simpler operations and can sacrifice some query flexibility
-- **To Option D (Polyglot)**: When scale demands specialized stores:
-  - Vector DB (Pinecone, Weaviate) for embeddings
-  - Document DB (MongoDB) for observations
-  - Graph DB (Neo4j) for relationship analysis
-  - Redis for caching
-
-The architecture supports gradual evolution without major rewrites. Each option is designed to handle different scale and complexity requirements:
-- **Option A**: Best for small teams, rapid iteration
-- **Option B**: Best for regulated environments, strong consistency needs  
-- **Option C**: Best for relationship-heavy analysis, explainability
-- **Option D**: Best for large scale, specialized performance requirements
+PersonaKit enables a new category of applications where agents can usefully approximate specific people for role-playing scenarios. This focused approach - creating good-enough mental models for specific purposes - provides practical value while maintaining appropriate boundaries around privacy and consent.

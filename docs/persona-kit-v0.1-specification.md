@@ -2,7 +2,9 @@
 
 ## Overview
 
-PersonaKit v0.1 is a focused MVP implementation of the Work Assistant use case, designed to validate core concepts while providing immediate value to individual knowledge workers.
+PersonaKit v0.1 is a focused MVP that enables work assistant agents to model their users' work patterns and preferences. It validates the core concept of agents becoming more effective by understanding and adapting to the specific humans they assist.
+
+Note: While v0.1 focuses on the assistant use case (agent adapting to user), future versions will expand to full role-playing scenarios (agent embodying other people).
 
 ## Why Work Assistant First?
 
@@ -14,9 +16,9 @@ PersonaKit v0.1 is a focused MVP implementation of the Work Assistant use case, 
 
 ## v0.1 Architecture
 
-PersonaKit v0.1 is designed as a persona generation service with configuration-driven mappers:
+PersonaKit v0.1 provides human modeling infrastructure with configuration-driven mappers:
 
-1. **PersonaKit Service (API)** - The persona generation service
+1. **PersonaKit Service (API)** - Human modeling and adaptation infrastructure
    - REST API for observations, mindscapes, personas
    - Background processing of observations
    - Rule engine for evaluating mapper configurations
@@ -35,7 +37,7 @@ PersonaKit v0.1 is designed as a persona generation service with configuration-d
    - Uploaded via API, not compiled in
    - Automatically versioned and adjusted by feedback
 
-This architecture makes PersonaKit a domain-agnostic service that any application can use via API calls.
+This architecture makes PersonaKit domain-agnostic infrastructure that agents can use to model and adapt to specific users.
 
 ## v0.1 Scope
 
@@ -49,9 +51,9 @@ This architecture makes PersonaKit a domain-agnostic service that any applicatio
   - Feedback table
 - **API**: REST endpoints for core operations
   - `POST /observations` - Ingest work patterns
-  - `POST /personas` - Generate work optimization persona
+  - `POST /personas` - Generate user model for agent adaptation
   - `POST /feedback` - Collect accuracy feedback
-  - `GET /suggestions` - Get current work suggestions
+  - `GET /suggestions` - Get personalized recommendations
 - **Processing**: Basic Mindscaper for trait extraction
   - Simple pattern recognition from work artifacts
   - Incremental mindscape updates
@@ -61,14 +63,20 @@ This architecture makes PersonaKit a domain-agnostic service that any applicatio
 metadata:
   id: daily-work-optimizer-v1
   name: "Daily Work Optimizer"
-  description: "Optimize daily work patterns and productivity"
+  description: "Model user work patterns for personalized assistance"
   version: 1.0
+  use_case: "work_assistant"
 
 required_traits:
   - work.energy_patterns
   - work.focus_duration
   - work.task_switching_cost
-  - productivity.peak_hours
+  - work.peak_hours
+
+fidelity_levels:
+  basic: [work_preferences]
+  medium: [work_preferences, energy_patterns]
+  high: [work_preferences, energy_patterns, communication_style]
 
 rules:
   - id: high_energy_deep_work
@@ -77,9 +85,9 @@ rules:
         - trait: work.energy_patterns.current
           equals: high
     actions:
-      - generate_suggestion:
-          type: task_recommendation
-          template: deep_work_window
+      - include_trait:
+          name: work.focus_recommendation
+          value: deep_work_window
     weight: 1.0  # Adjustable by feedback
 
 templates:
@@ -103,7 +111,7 @@ templates:
    ```
 
 2. **Mock Data Option** (in companion)
-   - Generate realistic work patterns for testing
+   - Generate plausible work patterns for testing
    - Immediate persona generation without waiting
 
 3. **API Integration**
@@ -118,7 +126,7 @@ templates:
 Good morning! How's your energy today?
 [Low] [Medium] [High] [Skip]
 
-Based on your calendar, you have 3 focus blocks available.
+Based on your patterns, you have 3 focus blocks available.
 Suggested order: [Deep work] → [Meeting prep] → [Email batch]
 ```
 
@@ -138,16 +146,16 @@ Any specific feedback? [optional text]
 ### What v0.1 Does NOT Include
 
 1. **Deferred Complexity**
-   - No stakeholder personas (just self)
+   - No full role-playing (other people personas)
    - No vector database (JSONB queries only)
    - No graph layer
    - No sync protocol (single device)
    - No mobile SDK
-   - No other use cases (English coaching, marketing)
+   - No other use cases (English coaching, interview prep)
 
 2. **Deferred Features**
-   - Multiple mappers
-   - Persona composition from multiple mappers
+   - Multiple simultaneous personas
+   - High-fidelity embodiment
    - Advanced trait extraction
    - Machine learning improvements
    - Team/organizational features
@@ -180,6 +188,7 @@ CREATE TABLE personas (
   mapper_id VARCHAR(100),
   core JSONB,          -- Low-volatility traits
   overlay JSONB,       -- High-volatility state
+  fidelity FLOAT,      -- 0.0 to 1.0
   expires_at TIMESTAMP NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -187,7 +196,7 @@ CREATE TABLE personas (
 CREATE TABLE feedback (
   id UUID PRIMARY KEY,
   persona_id UUID NOT NULL,
-  rating INTEGER,
+  accuracy FLOAT,      -- How well it matched
   helpful BOOLEAN,
   context JSONB,
   created_at TIMESTAMP DEFAULT NOW()
@@ -196,13 +205,14 @@ CREATE TABLE feedback (
 
 ### API Examples
 
-**Generate Daily Persona**:
+**Generate Work Assistant Persona**:
 ```bash
 POST /personas
 {
   "userId": "current-user",
   "mapperId": "daily-work-optimizer-v1",
-  "taskContext": {
+  "fidelity": 0.6,  # Medium fidelity for daily use
+  "context": {
     "timeOfDay": "morning",
     "dayOfWeek": "monday"
   }
@@ -211,6 +221,13 @@ POST /personas
 Response:
 {
   "personaId": "...",
+  "traits": {
+    "work_style": {
+      "focus_preference": "90_minute_blocks",
+      "energy_pattern": "morning_peak",
+      "interruption_tolerance": "low"
+    }
+  },
   "suggestions": [
     {
       "time": "9:00-11:00",
@@ -222,12 +239,7 @@ Response:
       "activity": "email-batch",
       "reason": "Energy dip, good for routine tasks"
     }
-  ],
-  "currentState": {
-    "energyLevel": "high",
-    "focusBlocks": 3,
-    "meetingLoad": "medium"
-  }
+  ]
 }
 ```
 
@@ -277,11 +289,11 @@ Response:
 ## Migration Path to v0.2
 
 v0.1 is designed to evolve:
-1. **Add Stakeholder Mappers** - Review simulation
-2. **Enhance Bootstrapping** - More extraction strategies
-3. **Add Vector Search** - Better trait matching
-4. **Multi-device Sync** - Work across devices
-5. **Team Features** - Aggregate patterns
+1. **Add Role-Playing Personas** - Interview prep, colleague simulation
+2. **Multi-Persona Support** - Switch between multiple people
+3. **Higher Fidelity** - Mannerisms, speech patterns
+4. **Vector Search** - Better trait matching
+5. **Team Features** - Shared personas for training
 
 ## Constraints & Assumptions
 
@@ -293,17 +305,18 @@ v0.1 is designed to evolve:
 ## Definition of Done for v0.1
 
 - [ ] Can bootstrap new user in < 10 minutes
-- [ ] Generates personalized daily work suggestions
+- [ ] Generates personalized work assistance based on user patterns
 - [ ] Suggestions improve based on feedback
 - [ ] Complete development environment in one command
 - [ ] Basic documentation and examples
 - [ ] All core APIs have integration tests
 - [ ] Performance meets targets
-- [ ] API is stable and ready for integration
+- [ ] Clear path to role-playing features in v0.2
 
 ## Out of Scope (Explicitly)
 
 - Authentication/authorization (assume single user)
+- Full role-playing/embodiment features
 - Data export/import
 - Sophisticated ML/AI improvements
 - Web UI (CLI/API only)
@@ -312,6 +325,6 @@ v0.1 is designed to evolve:
 
 ## Note on v0.2 Direction
 
-v0.2 will focus on integrating PersonaKit with other applications (e.g., SQL Coach) rather than expanding to additional use cases. v0.1 should prioritize a stable API foundation that external applications can consume.
+v0.2 will expand PersonaKit to full role-playing scenarios, enabling agents to embody colleagues, interviewers, customers, and other personas for training and simulation use cases. v0.1 establishes the foundation with user modeling for assistants.
 
-This specification provides a clear, achievable target for v0.1 that proves PersonaKit's value while maintaining flexibility for future expansion.
+This specification provides a clear, achievable target for v0.1 that proves PersonaKit's value while maintaining flexibility for the full vision of human modeling and embodiment.

@@ -1,11 +1,11 @@
 # PersonaKit Technical Specification
 
-## **1. System Architecture: Service-Based Model**
+## **1. System Architecture: Human Modeling and Embodiment System**
 
-PersonaKit operates as a centralized service that applications interact with via REST API.
+PersonaKit provides specialized infrastructure for agents that need to role-play as specific real people. It enhances agent effectiveness in scenarios requiring human simulation.
 
-* **PersonaKit Service:** A central, server-side application that is the canonical source of truth. It manages the databases, exposes the HTTP API, runs the background agents (Mindscaper, Configuration Adjuster), and evaluates mapper configurations through its rule engine.  
-* **PersonaKit SDK:** A lightweight client library (e.g., a Python package) integrated into the Actor's application. It handles API communication, manages a local cache of Personas and Mappers, and enables offline functionality.
+* **PersonaKit Service:** Manages behavioral models of real people, generates role-playing personas, and learns from feedback to improve fidelity. It stores observations, processes them into behavioral patterns, and serves personas with adjustable fidelity levels.
+* **PersonaKit SDK:** Enables agents to adopt/release personas, adjust fidelity levels, and seamlessly integrate human modeling into their workflows. The SDK handles caching, offline fallbacks, and smooth transitions between personas.
 
 ## **2. Data Synchronization Protocol**
 
@@ -31,18 +31,27 @@ The SDK uses a two-way, asynchronous process to sync with the Service.
 * **Staleness Flag:** The Persona Core is treated as a materialized view. It is not rebuilt on every underlying data change due to the high cost of LLM calls.  
 * **Trigger:** When the Mindscaper successfully updates a Mindscape, it publishes an event (e.g., mindscape_updated).  
 * **Action:** A listener process catches this event and sets an is_stale: true flag on all cached Persona Cores that depend on that Mindscape.  
-* **User Choice:** When an Actor requests a stale Persona, the API can inform the client, allowing a choice between using the fast, free (but stale) cached version or paying the cost to regenerate a fresh one.
+* **User Choice:** When an agent requests a stale Persona, the API can inform the client, allowing a choice between using the fast, free (but stale) cached version or paying the cost to regenerate a fresh one.
 
 ## **5. API Endpoints**
 
-### **5.1 Persona Mapping**
+### **5.1 Persona Adoption**
 ```
-GET /map-persona?mapperId=...&personaId=...&detailLevel=...
+GET /personas/{personaId}?mapperId=...&fidelity=...
 ```
+Returns a persona for the agent to adopt. Fidelity ranges from 0.0 (basic traits) to 1.0 (maximum available detail - still an approximation).
 
 ### **5.2 Feedback Submission**
 ```
 POST /feedback
+{
+  "personaId": "...",
+  "accuracy": 0.85,
+  "context": {
+    "scenario": "interview_prep",
+    "deviations": ["too_formal", "missed_humor"]
+  }
+}
 ```
 
 ### **5.3 Mapper Configuration Management**
@@ -71,9 +80,10 @@ Mapper configurations are stored as JSONB in the database, allowing for:
 ### **6.2 Rule Engine**
 The rule engine evaluates mapper configurations:
 1. **Condition Evaluation**: Checks trait values, time conditions, and context
-2. **Weight Application**: Applies rule weights to determine which suggestions to generate
-3. **Template Rendering**: Fills in suggestion templates with dynamic values
-4. **Feedback Integration**: Maps suggestions back to rules for weight adjustment
+2. **Weight Application**: Applies rule weights to determine persona characteristics
+3. **Fidelity Adjustment**: Scales detail based on requested fidelity level
+4. **Template Rendering**: Fills in persona templates with appropriate traits
+5. **Feedback Integration**: Maps accuracy feedback to rule adjustments
 
 ### **6.3 Configuration Schema**
 ```yaml
@@ -81,15 +91,82 @@ metadata:
   id: string                      # Unique identifier
   version: string                 # Semantic version
   description: string             # Human-readable description
+  use_case: string               # Category (training, analysis, support)
+  
+fidelity_levels:                  # Amount of detail included (not realism)
+  basic: [core_traits]           # Minimal viable approximation
+  medium: [core_traits, communication_style]  # Useful for most cases
+  high: [core_traits, communication_style, mannerisms, knowledge]  # Maximum detail available
   
 trait_mappings:                   # For feedback processing
-  suggestion_type: [trait_names]
+  behavior_type: [trait_names]
   
 rules:
   - id: string
     conditions:                   # When to apply this rule
       all/any: [...]             # Logical operators
-    actions:                      # What to do
-      - generate_suggestion: {...}
+    actions:                      # What traits to include
+      - include_trait: {...}
     weight: float                 # Adjustable by feedback
 ```
+
+## **7. Persona Usage Patterns**
+
+### **7.1 Initialization with Persona**
+```python
+# Agent initialized to always be Sarah
+class SarahAgent:
+    def __init__(self):
+        self.persona = personakit.get_persona("colleague_sarah", fidelity=0.8)
+        self.initialize_with_persona(self.persona)
+    
+    def chat(self, message):
+        # Always responds as Sarah
+        return self.respond_as_persona(message)
+```
+
+### **7.2 Dynamic Adoption**
+```python
+# Agent can switch personas as needed
+agent = FlexibleAgent()
+persona = personakit.get_persona("interviewer_technical", fidelity=0.7)
+agent.adopt_persona(persona)
+
+# Conduct interview as that persona
+response = agent.conduct_interview()
+
+# Can switch to different persona or operate without one
+agent.adopt_persona(another_persona)  # or agent.clear_persona()
+```
+
+### **7.3 Hybrid Usage**
+```python
+# Agent with default persona but can switch
+class AdaptiveAgent:
+    def __init__(self, default_persona_id=None):
+        if default_persona_id:
+            self.default_persona = personakit.get_persona(default_persona_id)
+            self.current_persona = self.default_persona
+        else:
+            self.current_persona = None
+    
+    def switch_context(self, new_persona_id=None):
+        if new_persona_id:
+            self.current_persona = personakit.get_persona(new_persona_id)
+        else:
+            self.current_persona = self.default_persona
+```
+
+## **8. Privacy & Consent Model**
+
+PersonaKit requires explicit consent for modeling individuals:
+- **Self-Modeling**: Users can model themselves for personal agents
+- **Authorized Modeling**: Organizations can model employees with consent
+- **Public Figure Modeling**: Limited modeling based on public information
+- **Synthetic Personas**: Composite personas that don't represent real individuals
+
+Each persona has associated privacy controls:
+- Who can access the persona
+- What fidelity levels are permitted
+- Expiration and deletion policies
+- Audit trails for usage

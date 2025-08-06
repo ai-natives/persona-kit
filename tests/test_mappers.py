@@ -60,7 +60,7 @@ async def test_daily_work_optimizer_required_traits():
 
     assert "work.energy_patterns" in required
     assert "work.focus_duration" in required
-    assert "productivity.peak_hours" in required
+    assert "work.peak_hours" in required
     assert "work.task_switching_cost" in required
     assert "current_state.energy_level" in required
     assert len(required) == 5
@@ -105,7 +105,7 @@ async def test_persona_generation_success(async_db_session):
                 "value": {"p50": 60, "p90": 90, "recent_trend": "stable"},
                 "confidence": 0.9,
             },
-            "productivity.peak_hours": {
+            "work.peak_hours": {
                 "value": ["09:00-11:00"],
                 "confidence": 0.7,
             },
@@ -148,7 +148,7 @@ async def test_time_context_handling(async_db_session):
                 },
             },
             "work.focus_duration": {"value": {"p50": 60, "p90": 90}},
-            "productivity.peak_hours": {"value": ["09:00-11:00"]},
+            "work.peak_hours": {"value": ["09:00-11:00"]},
             "work.task_switching_cost": {"value": "medium"},
             "current_state.energy_level": {"value": "medium"},
         },
@@ -194,7 +194,7 @@ async def test_suggestion_generation(async_db_session):
                 },
             },
             "work.focus_duration": {"value": {"p50": 60, "p90": 90}},
-            "productivity.peak_hours": {"value": ["09:00-11:00"]},
+            "work.peak_hours": {"value": ["09:00-11:00"]},
             "work.task_switching_cost": {"value": "high"},
             "current_state.energy_level": {"value": "high"},
         },
@@ -228,7 +228,7 @@ async def test_meeting_buffer_calculation(async_db_session):
         traits={
             "work.energy_patterns": {"value": {}},
             "work.focus_duration": {"value": {"p50": 60, "p90": 90}},
-            "productivity.peak_hours": {"value": []},
+            "work.peak_hours": {"value": []},
             "work.task_switching_cost": {"value": "high"},
             "current_state.energy_level": {"value": "medium"},
         },
@@ -244,7 +244,7 @@ async def test_meeting_buffer_calculation(async_db_session):
         traits={
             "work.energy_patterns": {"value": {}},
             "work.focus_duration": {"value": {"p50": 60, "p90": 90}},
-            "productivity.peak_hours": {"value": []},
+            "work.peak_hours": {"value": []},
             "work.task_switching_cost": {"value": "low"},
             "current_state.energy_level": {"value": "medium"},
         },
@@ -266,7 +266,7 @@ async def test_ttl_override(async_db_session):
         traits={
             "work.energy_patterns": {"value": {}},
             "work.focus_duration": {"value": {"p50": 60, "p90": 90}},
-            "productivity.peak_hours": {"value": []},
+            "work.peak_hours": {"value": []},
             "work.task_switching_cost": {"value": "medium"},
             "current_state.energy_level": {"value": "medium"},
         },
@@ -308,7 +308,7 @@ async def test_persona_api_integration(async_db_session):
             "value": {"p50": 75, "p90": 120, "recent_trend": "increasing"},
             "confidence": 0.9,
         },
-        "productivity.peak_hours": {
+        "work.peak_hours": {
             "value": ["09:00-11:00", "14:00-16:00"],
             "confidence": 0.7,
         },
