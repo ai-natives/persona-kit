@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import UUID
 import uuid
 import enum
 
-from src.db.base import Base
+from .base import Base
 
 
 class MapperStatus(str, enum.Enum):

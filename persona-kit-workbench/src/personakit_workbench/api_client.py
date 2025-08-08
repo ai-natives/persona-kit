@@ -92,6 +92,90 @@ class PersonaKitClient:
         response.raise_for_status()
         return response.json()
 
+    async def create_self_observation(
+        self,
+        person_id: str | UUID,
+        text: str,
+        tags: list[str] | None = None,
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Create a self-observation narrative."""
+        data = {
+            "person_id": str(person_id),
+            "raw_text": text,
+            "tags": tags or [],
+            "context": context or {},
+        }
+        response = await self.client.post("/api/narratives/self-observation", json=data)
+        response.raise_for_status()
+        return response.json()
+
+    async def create_curation(
+        self,
+        person_id: str | UUID,
+        trait_path: str,
+        text: str,
+        tags: list[str] | None = None,
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Create a trait curation narrative."""
+        data = {
+            "person_id": str(person_id),
+            "trait_path": trait_path,
+            "raw_text": text,
+            "action": "expand",  # Default action
+            "original_value": context.get("original_value", ""),  # Will need to be provided
+            "tags": tags or [],
+            "context": context or {},
+        }
+        response = await self.client.post("/api/narratives/curate", json=data)
+        response.raise_for_status()
+        return response.json()
+
+    async def search_narratives(
+        self,
+        person_id: str | UUID,
+        query: str,
+        narrative_type: str | None = None,
+        limit: int = 10,
+        similarity_threshold: float = 0.7,
+    ) -> dict[str, Any]:
+        """Search narratives semantically."""
+        data = {
+            "person_id": str(person_id),
+            "query": query,
+            "limit": limit,
+            "threshold": similarity_threshold,
+        }
+        if narrative_type:
+            data["narrative_type"] = narrative_type
+        
+        response = await self.client.post("/api/narratives/search", json=data)
+        response.raise_for_status()
+        return response.json()
+
+    async def get_person_narratives(
+        self,
+        person_id: str | UUID,
+        narrative_type: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
+        """Get narratives for a person."""
+        params = {
+            "limit": limit,
+            "offset": offset,
+        }
+        if narrative_type:
+            params["narrative_type"] = narrative_type
+        
+        response = await self.client.get(
+            f"/api/narratives/person/{person_id}",
+            params=params
+        )
+        response.raise_for_status()
+        return response.json()
+
     async def __aenter__(self) -> "PersonaKitClient":
         """Async context manager entry."""
         return self

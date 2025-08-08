@@ -1,0 +1,61 @@
+# Vector configuration for PersonaKit logging
+# This collects logs from all PersonaKit services
+
+# Data directory for Vector state
+data_dir = "./vector-data"
+
+# PersonaKit API logs
+[sources.personakit_api]
+type = "file"
+include = ["./app.log"]
+read_from = "beginning"
+
+# Career Navigator Backend logs
+[sources.career_navigator]
+type = "file"
+include = ["./examples/career-navigator/backend/app.log"]
+read_from = "beginning"
+
+# Agno Coaching Backend logs
+[sources.agno_coaching]
+type = "file"
+include = ["./examples/agno-coaching-ui/backend/app.log"]
+read_from = "beginning"
+
+# Admin Dashboard Backend logs
+[sources.admin_dashboard]
+type = "file"
+include = ["./tools/admin-dashboard/backend/app.log"]
+read_from = "beginning"
+
+# Parse JSON logs where applicable
+[transforms.parse_logs]
+type = "remap"
+inputs = ["personakit_api", "career_navigator", "agno_coaching", "admin_dashboard"]
+source = '''
+# Try to parse as JSON first (for PersonaKit API)
+. = parse_json!(.message) ?? .
+
+# Add service metadata
+.service = replace!(file, r'.*/([\w-]+)/app\.log$', "$1") ?? "unknown"
+'''
+
+# Console output for debugging
+[sinks.console]
+type = "console"
+inputs = ["parse_logs"]
+encoding.codec = "json"
+
+# File output for persistence
+[sinks.file]
+type = "file"
+inputs = ["parse_logs"]
+path = "./logs/all-services.log"
+encoding.codec = "json"
+
+# Example: Forward to external logging service
+# [sinks.elasticsearch]
+# type = "elasticsearch"
+# inputs = ["parse_logs"]
+# endpoint = "https://your-elasticsearch.com"
+# bulk.index = "personakit-logs-%Y.%m.%d"

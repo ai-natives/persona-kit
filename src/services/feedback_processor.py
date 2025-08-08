@@ -168,7 +168,7 @@ class FeedbackProcessor:
                     f"Threshold reached for {suggestion_type}: {count} negative feedback"
                 )
                 # Get traits for this suggestion type
-                affected_traits = self._get_trait_mapping(suggestion_type)
+                affected_traits = self._get_legacy_trait_mapping(suggestion_type)
                 await self._adjust_trait_weights(
                     person_id, affected_traits, self.NEGATIVE_ADJUSTMENT
                 )

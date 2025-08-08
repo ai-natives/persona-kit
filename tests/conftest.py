@@ -3,6 +3,7 @@ import asyncio
 import uuid
 from typing import AsyncGenerator, Generator
 
+import httpx
 import pytest
 import pytest_asyncio
 import sqlalchemy as sa
@@ -23,7 +24,7 @@ def event_loop():
 @pytest.fixture(scope="session")
 def postgres_container() -> Generator[PostgresContainer, None, None]:
     """Start a PostgreSQL container for the test session."""
-    with PostgresContainer("postgres:16-alpine") as postgres:
+    with PostgresContainer("pgvector/pgvector:pg16") as postgres:
         postgres.start()
         yield postgres
 
@@ -60,6 +61,9 @@ async def test_db(postgres_container: PostgresContainer) -> AsyncGenerator[Async
             END $$;
         """))
         
+        # Create pgvector extension
+        await conn.execute(sa.text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        
         # Then create tables
         await conn.run_sync(Base.metadata.create_all)
     
@@ -74,9 +78,22 @@ async def test_db(postgres_container: PostgresContainer) -> AsyncGenerator[Async
         # Rollback any uncommitted changes
         await session.rollback()
     
-    # Drop all tables after test
+    # Drop all tables after test in correct order to handle dependencies
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        # Drop dependent tables first
+        await conn.execute(sa.text("DROP TABLE IF EXISTS persona_narrative_usage CASCADE"))
+        await conn.execute(sa.text("DROP TABLE IF EXISTS trait_narrative_links CASCADE"))
+        await conn.execute(sa.text("DROP TABLE IF EXISTS narratives CASCADE"))
+        await conn.execute(sa.text("DROP TABLE IF EXISTS feedback CASCADE"))
+        await conn.execute(sa.text("DROP TABLE IF EXISTS mindscapes CASCADE"))
+        await conn.execute(sa.text("DROP TABLE IF EXISTS observations CASCADE"))
+        await conn.execute(sa.text("DROP TABLE IF EXISTS outbox_tasks CASCADE"))
+        await conn.execute(sa.text("DROP TABLE IF EXISTS personas CASCADE"))
+        await conn.execute(sa.text("DROP TABLE IF EXISTS users CASCADE"))
+        await conn.execute(sa.text("DROP TABLE IF EXISTS mapper_configs CASCADE"))
+        await conn.execute(sa.text("DROP TYPE IF EXISTS mapperstatus CASCADE"))
+        await conn.execute(sa.text("DROP TYPE IF EXISTS observation_type CASCADE"))
+        await conn.execute(sa.text("DROP TYPE IF EXISTS task_status CASCADE"))
     
     # Cleanup
     await engine.dispose()
@@ -103,3 +120,80 @@ def test_observation_data(test_person_id: uuid.UUID) -> dict:
         },
         "meta": {"source": "test"},
     }
+
+
+@pytest_asyncio.fixture
+async def async_client(test_db: AsyncSession) -> AsyncGenerator[httpx.AsyncClient, None]:
+    """Create an async test client for API testing."""
+    from src.main import app
+    from src.database import get_db
+    
+    # Override the database dependency to use test database
+    async def override_get_db():
+        yield test_db
+    
+    app.dependency_overrides[get_db] = override_get_db
+    
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+        
+    # Clean up overrides
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def async_client_concurrent() -> AsyncGenerator[httpx.AsyncClient, None]:
+    """Create an async test client for concurrent API testing.
+    
+    This fixture creates a new database session for each request,
+    allowing concurrent requests without session conflicts.
+    """
+    from src.main import app
+    from src.database import async_session_maker, get_db
+    
+    # Create a new session for each request
+    async def override_get_db():
+        async with async_session_maker() as session:
+            yield session
+    
+    app.dependency_overrides[get_db] = override_get_db
+    
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+        
+    # Clean up overrides
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def test_client(test_db: AsyncSession) -> AsyncGenerator[httpx.AsyncClient, None]:
+    """Alias for async_client for backwards compatibility."""
+    from src.main import app
+    from src.database import get_db
+    
+    # Override the database dependency to use test database
+    async def override_get_db():
+        yield test_db
+    
+    app.dependency_overrides[get_db] = override_get_db
+    
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+        
+    # Clean up overrides
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def test_auth_headers() -> dict:
+    """Auth headers no longer needed - returning empty dict for compatibility."""
+    return {}
+
+
+@pytest.fixture
+def auth_headers() -> dict:
+    """Auth headers no longer needed - returning empty dict for compatibility."""
+    return {}

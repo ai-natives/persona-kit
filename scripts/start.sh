@@ -29,6 +29,9 @@ fi
 echo "Running database migrations..."
 uv run alembic upgrade head
 
+# Set log file location (always set, app decides whether to use it)
+export LOG_FILE="${LOG_FILE:-./app.log}"
+
 # Start the server
 echo "Starting API server on port ${API_PORT:-8042}..."
 exec uv run python -m src.main

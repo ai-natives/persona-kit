@@ -1,0 +1,102 @@
+#!/bin/bash
+# Start the Agno Coaching UI demo
+
+echo "🚀 Starting Agno Coaching UI Demo..."
+echo ""
+
+# Get the root directory (two levels up from this script)
+ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+
+# Function to ensure PersonaKit is running
+ensure_personakit() {
+    echo "Checking PersonaKit dependencies..."
+    
+    # Check if PersonaKit is running
+    if curl -s http://localhost:8042/health > /dev/null 2>&1; then
+        echo "✅ PersonaKit is already running"
+        return 0
+    fi
+    
+    echo "PersonaKit is not running. Starting it now..."
+    
+    # Check if we can find the root start script
+    if [ -f "$ROOT_DIR/start-personakit.sh" ]; then
+        # Use a dedicated PersonaKit start script if available
+        cd "$ROOT_DIR" && ./start-personakit.sh
+    elif [ -f "$ROOT_DIR/package.json" ]; then
+        # Use pnpm commands from root
+        echo "Starting PersonaKit infrastructure..."
+        cd "$ROOT_DIR"
+        
+        # Start database if needed
+        if ! docker ps | grep personakit-postgres > /dev/null 2>&1; then
+            echo "Starting database..."
+            pnpm run start:db
+            pnpm run wait:db
+            pnpm run migrate
+        fi
+        
+        # Start PersonaKit
+        pnpm run start:personakit
+        pnpm run wait:personakit
+        
+        # Seed data
+        pnpm run seed
+        
+        cd - > /dev/null
+    else
+        echo "❌ Could not find PersonaKit root directory"
+        echo "   Please start PersonaKit manually or run from the root with: pnpm run demo"
+        exit 1
+    fi
+    
+    # Verify PersonaKit is now running
+    echo "Waiting for PersonaKit to be ready..."
+    for i in {1..30}; do
+        if curl -s http://localhost:8042/health > /dev/null 2>&1; then
+            echo "✅ PersonaKit is now running"
+            return 0
+        fi
+        sleep 1
+    done
+    
+    echo "❌ PersonaKit failed to start"
+    exit 1
+}
+
+# Show URL function
+show_url() {
+    sleep 3  # Wait for services to fully start
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🎉 Demo is ready!"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "📍 Open your browser to:"
+    echo "   👉 http://localhost:5173"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+}
+
+# Ensure PersonaKit is running
+ensure_personakit
+
+# Install dependencies if needed
+if [ ! -d "frontend/node_modules" ] || [ ! -d "backend/.venv" ]; then
+    echo "Installing dependencies..."
+    pnpm install:all
+fi
+
+# Start services
+./scripts/start-backend.sh &
+BACKEND_PID=$!
+
+./scripts/start-frontend.sh &
+FRONTEND_PID=$!
+
+# Show URL in background
+show_url &
+
+# Wait and cleanup on exit
+trap "echo 'Stopping demo...'; kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit" INT
+wait

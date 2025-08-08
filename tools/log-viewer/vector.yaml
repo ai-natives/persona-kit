@@ -1,0 +1,124 @@
+# vector.yaml - PersonaKit unified logging configuration
+
+# --- INPUTS ---
+# Define where Vector gets its data from.
+sources:
+  # 🌐 For frontend apps, listen for logs over HTTP.
+  frontend_http:
+    type: http_server
+    address: "127.0.0.1:8105"
+    path: "/log"
+    decoding:
+      codec: "json" # Expect logs to be sent as JSON.
+
+  # ⚙️ For all backend services, watch for new log files.
+  backend_files:
+    type: file
+    # Watch for any file ending in .log inside the logs directory.
+    include: 
+      - "/tmp/personakit-logs/*.log"
+      - "../../*.log"  # Also watch for logs in the main PersonaKit directory
+      - "../../examples/*/backend/*.log"  # And example app logs
+    # This ensures Vector remembers its position in each file if you restart it.
+    data_dir: "./vector-data"
+
+# --- PROCESSING ---
+# Add the source filename to backend logs and standardize format.
+transforms:
+  # Name this transform for clarity.
+  annotate_backend_logs:
+    type: remap # The 'remap' transform lets you modify events.
+    # Get events from the 'backend_files' source.
+    inputs: ["backend_files"]
+    # VRL (Vector Remap Language) script to add fields.
+    source: |
+      # Extract just the filename from the full path
+      parts = split(string!(.file), "/")
+      filename = parts[length(parts) - 1]
+      
+      # Map filenames to friendly source names
+      .source = if filename == "personakit.log" {
+        "PERSONAKIT"
+      } else if filename == "api_server_latest.log" {
+        "AGNO-COACH"
+      } else if filename == "workbench.log" {
+        "WORKBENCH"
+      } else if filename == "explorer.log" {
+        "EXPLORER"
+      } else {
+        replace(filename, r'\.log$', "") ?? filename
+      }
+      
+      # Parse log level from message if possible
+      .level = if contains(string!(.message), "ERROR") || contains(string!(.message), "✗") {
+        "error"
+      } else if contains(string!(.message), "WARNING") || contains(string!(.message), "WARN") {
+        "warning"  
+      } else if contains(string!(.message), "DEBUG") {
+        "debug"
+      } else {
+        "info"
+      }
+      
+      # Ensure we have a timestamp
+      .timestamp = .timestamp ?? now()
+
+  # Process frontend logs
+  annotate_frontend_logs:
+    type: remap
+    inputs: ["frontend_http"]
+    source: |
+      # Ensure source field exists
+      .source = .app ?? .source ?? "BROWSER"
+      
+      # Normalize level field
+      .level = downcase(string!(.level)) ?? "info"
+      
+      # Ensure timestamp
+      .timestamp = .timestamp ?? now()
+
+# --- OUTPUTS ---
+# Define where the aggregated logs go.
+sinks:
+  # 🖥️ Send everything to the console (your terminal).
+  console_display:
+    type: console
+    inputs: ["annotate_backend_logs", "annotate_frontend_logs"]
+    encoding:
+      codec: "text"
+      only_fields: ["formatted"]
+    # Format logs nicely for console display
+    framing:
+      method: "newline_delimited"
+
+  # 💾 Also save to JSON files for the web viewer
+  json_files:
+    type: file
+    inputs: ["annotate_backend_logs", "annotate_frontend_logs"]
+    path: "./logs/personakit-%Y-%m-%d.log"
+    encoding:
+      codec: "json"
+      
+  # 🔧 Format logs for nice console display
+  format_logs:
+    type: remap
+    inputs: ["annotate_backend_logs", "annotate_frontend_logs"]
+    source: |
+      # Format timestamp
+      ts = format_timestamp!(.timestamp, format: "%H:%M:%S%.3f")
+      
+      # Determine level symbol
+      level_symbol = if .level == "error" {
+        "✗"
+      } else if .level == "warning" {
+        "⚠"
+      } else if .level == "debug" {
+        "●"
+      } else {
+        "ℹ"
+      }
+      
+      # Build formatted message
+      source = string!(.source)
+      message = string!(.message)
+      .formatted = ts + " [" + source + "] " + level_symbol + " " + message

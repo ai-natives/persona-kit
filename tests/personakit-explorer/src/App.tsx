@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import * as Tabs from '@radix-ui/react-tabs';
-import { Brain, FlaskConical, Bot, BarChart3 } from 'lucide-react';
+import { Brain, BarChart3, BookOpen } from 'lucide-react';
 import { MindscapeExplorer } from './components/MindscapeExplorer';
-import { PersonaLab } from './components/PersonaLab';
-import { AgentPlayground } from './components/AgentPlayground';
+import { NarrativesExplorer } from './components/NarrativesExplorer';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -17,8 +16,8 @@ const queryClient = new QueryClient({
   },
 });
 
-// Mock person for development
-const MOCK_PERSON_ID = "550e8400-e29b-41d4-a716-446655440001";
+// Mock person for development - Sato-san coaching scenario
+const MOCK_PERSON_ID = "sato-san-pm-dx-project";
 
 function App() {
   const [activeTab, setActiveTab] = useState('mindscape');
@@ -28,10 +27,10 @@ function App() {
       <div className="app">
         <header className="app-header">
           <div className="header-content">
-            <h1>PersonaKit Explorer</h1>
+            <h1>PersonaKit Explorer - Tech Coaching Assistant</h1>
             <div className="header-info">
-              <span>Person ID: {MOCK_PERSON_ID.slice(0, 8)}...</span>
-              <span>Environment: Development (Mock Data)</span>
+              <span>Learner: Sato-san (Assistant PM, DX Project)</span>
+              <span>Context: Learning to organize black-box tests</span>
             </div>
           </div>
         </header>
@@ -43,13 +42,9 @@ function App() {
                 <Brain size={18} />
                 <span>Mindscapes</span>
               </Tabs.Trigger>
-              <Tabs.Trigger value="personas" className="main-tab">
-                <FlaskConical size={18} />
-                <span>Persona Lab</span>
-              </Tabs.Trigger>
-              <Tabs.Trigger value="agents" className="main-tab">
-                <Bot size={18} />
-                <span>Agent Integration</span>
+              <Tabs.Trigger value="narratives" className="main-tab">
+                <BookOpen size={18} />
+                <span>Narratives</span>
               </Tabs.Trigger>
               <Tabs.Trigger value="analytics" className="main-tab" disabled>
                 <BarChart3 size={18} />
@@ -62,11 +57,8 @@ function App() {
               <Tabs.Content value="mindscape">
                 <MindscapeExplorer personId={MOCK_PERSON_ID} />
               </Tabs.Content>
-              <Tabs.Content value="personas">
-                <PersonaLab personId={MOCK_PERSON_ID} />
-              </Tabs.Content>
-              <Tabs.Content value="agents">
-                <AgentPlayground personId={MOCK_PERSON_ID} />
+              <Tabs.Content value="narratives">
+                <NarrativesExplorer personId={MOCK_PERSON_ID} />
               </Tabs.Content>
               <Tabs.Content value="analytics">
                 <div className="placeholder">

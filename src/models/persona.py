@@ -49,7 +49,8 @@ class Persona(Base):
         default=dict,
         server_default=text("'{}'::jsonb"),
     )
-    metadata: Mapped[dict[str, Any] | None] = mapped_column(
+    meta: Mapped[dict[str, Any] | None] = mapped_column(
+        "metadata",  # Use explicit column name to avoid SQLAlchemy reserved word
         JSON,
         nullable=True,
         default=dict,

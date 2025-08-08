@@ -1,0 +1,33 @@
+{
+  "name": "persona-kit",
+  "version": "0.1.1",
+  "description": "PersonaKit - Human modeling service for AI agents",
+  "private": true,
+  "scripts": {
+    "status": "./scripts/status.sh",
+    "start": "./scripts/start.sh",
+    "start:db": "docker-compose -f docker-compose.pgvector.yml up -d",
+    "stop": "pkill -f 'python -m src.main' || true",
+    "stop:db": "docker-compose -f docker-compose.pgvector.yml down",
+    "reset": "run-s stop:db clean start:db migrate",
+    "clean": "docker-compose -f docker-compose.pgvector.yml down -v",
+    "migrate": "uv run alembic upgrade head",
+    "migrate:down": "uv run alembic downgrade -1",
+    "logs": "tail -f app.log examples/*/backend/app.log tools/*/backend/app.log",
+    "logs:vector": "vector --config vector.toml",
+    "logs:clean": "rm -f app.log examples/*/backend/app.log tools/*/backend/app.log logs/all-services.log",
+    "test": "uv run pytest",
+    "lint": "uv run ruff check src/",
+    "format": "uv run ruff format src/",
+    "typecheck": "uv run mypy src/",
+    "check": "run-s lint typecheck test",
+    "health": "curl -s http://localhost:8042/health/ | jq ."
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

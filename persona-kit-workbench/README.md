@@ -40,11 +40,66 @@ cd persona-kit-workbench
 uv pip install -e .
 ```
 
+## Quick Start
+
+1. **Make sure PersonaKit API is running** (in another terminal):
+   ```bash
+   cd .. && ./scripts/start.sh
+   ```
+
+2. **Run the interactive bootstrap wizard**:
+   ```bash
+   ./start-cli.sh bootstrap
+   ```
+
+3. **Or use the mock server for standalone testing**:
+   ```bash
+   # Terminal 1: Start mock server
+   ./start-mock-server.sh
+   
+   # Terminal 2: Run bootstrap against mock
+   ./start-cli.sh bootstrap --api-url http://localhost:8043
+   ```
+
 ## Usage
 
-### Bootstrap Wizard
+### Available Commands
 
-Start the interactive wizard to set up your initial profile:
+Check what's available:
+```bash
+./start-cli.sh --help
+```
+
+Commands:
+- `bootstrap` - Interactive wizard to create your PersonaKit profile
+- `config` - Show current configuration
+- `generate-mock-data` - Create test observations
+- `add-observation` - Add a self-observation narrative
+- `curate-trait` - Curate a specific trait value
+- `list-narratives` - View recent narratives
+
+### Using the Startup Scripts (Recommended)
+
+The workbench includes startup scripts that enable logging for debugging:
+
+```bash
+# Run any CLI command with logging
+./start-cli.sh <command> [options]
+
+# Examples:
+./start-cli.sh bootstrap
+./start-cli.sh generate-mock-data --days 7
+./start-cli.sh config
+
+# Start mock server with logging (port 8043)
+./start-mock-server.sh
+```
+
+Logs are written to `./app.log` by default. This integrates with PersonaKit's Vector observability.
+
+### Direct Usage
+
+You can also run commands directly:
 
 ```bash
 persona-kit-workbench bootstrap
@@ -68,14 +123,19 @@ This creates:
 - Calendar events (meetings, focus blocks)
 - User preference observations
 
-### Web Interface (Optional)
+### Mock API Server
 
-Run the web-based bootstrap wizard:
+For testing without the full PersonaKit API:
 
 ```bash
-persona-kit-workbench serve
-# Visit http://localhost:8043/bootstrap
+# Start mock server on port 8043
+./start-mock-server.sh
+
+# Or manually:
+python mock_api_server.py
 ```
+
+The mock server provides simplified endpoints for testing workbench commands.
 
 ## Integration with PersonaKit
 
@@ -108,8 +168,25 @@ This workbench app demonstrates how to build applications on top of PersonaKit. 
 - Extract patterns for your own integration
 - Contribute improvements back
 
+## Logging and Debugging
+
+The workbench participates in PersonaKit's centralized logging:
+
+1. **Log Files**: All components write to `./app.log`
+2. **Log Levels**: Set via `LOG_LEVEL` environment variable (default: INFO)
+3. **Log Format**: Text or JSON via `LOG_FORMAT` environment variable
+
+### Environment Variables
+
+```bash
+export LOG_FILE="./logs/workbench.log"  # Custom log location
+export LOG_LEVEL="DEBUG"                # More verbose logging
+export LOG_FORMAT="json"                # JSON formatted logs
+export MOCK_SERVER_PORT="8044"          # Custom mock server port
+```
+
 ## Requirements
 
 - Python 3.11+
 - PersonaKit API running (default: http://localhost:8042)
-- Optional: Web framework dependencies for UI
+- Optional: Mock server for testing (default: http://localhost:8043)

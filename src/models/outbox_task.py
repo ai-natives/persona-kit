@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, Enum, Integer, String, text
+from sqlalchemy import JSON, DateTime, Integer, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -39,10 +39,10 @@ class OutboxTask(Base):
         JSON,
         nullable=False,
     )
-    status: Mapped[TaskStatus] = mapped_column(
-        Enum(TaskStatus, name="task_status", native_enum=False),
+    status: Mapped[str] = mapped_column(
+        String(20),
         nullable=False,
-        default=TaskStatus.PENDING,
+        default=TaskStatus.PENDING.value,  # Use .value to get the string
         server_default=text("'pending'"),
         index=True,
     )

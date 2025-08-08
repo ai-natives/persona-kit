@@ -1,7 +1,7 @@
 [project]
 name = "persona-kit"
-version = "0.1.0"
-description = "PersonaKit v0.1 - Work optimization through understanding patterns"
+version = "0.1.1"
+description = "PersonaKit - Human modeling service for AI agents"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -17,6 +17,11 @@ dependencies = [
     "python-multipart>=0.0.6",
     "greenlet>=3.0.0",
     "rich>=13.7.0",
+    "sentence-transformers>=2.2.2",
+    "numpy>=1.24.0",
+    "pgvector>=0.2.0",
+    "bcrypt>=4.0.1",
+    "python-jose[cryptography]>=3.3.0",
 ]
 
 [project.scripts]

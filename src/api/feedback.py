@@ -100,10 +100,10 @@ async def submit_feedback(
 
 @router.get("/analytics")
 async def get_feedback_analytics(
+    session: AsyncSession = Depends(get_db),
     person_id: uuid.UUID | None = None,
     mapper_id: str | None = None,
     days: int = 7,
-    session: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """Get feedback analytics.
     
@@ -126,7 +126,7 @@ async def get_feedback_analytics(
     
     # Get mapper-specific analytics (aggregate across all persons)
     from ..models.persona import Persona
-    from sqlalchemy import distinct
+    from sqlalchemy import distinct, select
     
     # Find all persons who have used this mapper
     stmt = select(distinct(Persona.person_id)).where(

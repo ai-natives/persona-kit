@@ -1,0 +1,150 @@
+# Vector configuration for PersonaKit log aggregation
+
+# Collect PersonaKit API logs
+[sources.personakit_logs]
+type = "file"
+include = ["../../personakit.log"]
+read_from = "end"
+data_dir = "./data"
+
+# Collect Agno Coach logs
+[sources.agno_logs]
+type = "file"
+include = ["../../examples/agno-coaching-ui/backend/api_server*.log"]
+read_from = "end"
+data_dir = "./data"
+
+# Collect Admin Dashboard logs
+[sources.admin_logs]
+type = "file"
+include = ["../admin-dashboard/backend/*.log"]
+read_from = "end"
+data_dir = "./data"
+
+# Collect Career Navigator logs
+[sources.career_logs]
+type = "file"
+include = ["../../examples/career-navigator/backend/*.log"]
+read_from = "end"
+data_dir = "./data"
+
+# Collect PersonaKit Explorer logs
+[sources.explorer_logs]
+type = "file"
+include = ["../../tests/personakit-explorer/*.log"]
+read_from = "end"
+data_dir = "./data"
+
+# Browser console logs via HTTP
+[sources.browser_logs]
+type = "http_server"
+address = "0.0.0.0:8105"
+path = "/log"
+encoding = "json"
+
+# Parse JSON logs from files
+[transforms.parse_logs]
+type = "remap"
+inputs = ["personakit_logs", "agno_logs", "admin_logs", "career_logs", "explorer_logs"]
+source = '''
+# Try to parse as JSON first
+parsed = parse_json(.message) ?? null
+if parsed != null && is_object(parsed) {
+  . = merge!(., parsed)
+}
+
+# Add source metadata and prefix
+parts = if exists(.file) { split(string!(.file), "/") } else { [] }
+filename = if length(parts) > 0 { string!(parts[-1]) } else { "" }
+if contains(filename, "personakit") {
+  .source = "[PERSONAKIT]"
+  .color = "green"
+} else if contains(filename, "agno") {
+  .source = "[AGNO-COACH]"
+  .color = "blue"
+} else if contains(filename, "admin") {
+  .source = "[ADMIN-DASH]"
+  .color = "magenta"
+} else if contains(filename, "career") {
+  .source = "[CAREER-NAV]"
+  .color = "yellow"
+} else if contains(filename, "explorer") {
+  .source = "[EXPLORER]"
+  .color = "purple"
+} else {
+  .source = "[" + upcase(filename) + "]"
+  .color = "white"
+}
+'''
+
+# Process browser logs
+[transforms.parse_browser_logs]
+type = "remap"
+inputs = ["browser_logs"]
+source = '''
+# Extract app name and format source prefix
+app_name = if exists(.app) { upcase(string!(.app)) } else { "UNKNOWN" }
+.source = "[BROWSER:" + app_name + "]"
+.color = "cyan"
+logs = if exists(.logs) { array!(.logs) } else { [] }
+
+# If we have a logs array, we'll need to handle it differently
+# For now, just format the first log entry
+if length(logs) > 0 {
+  first_log = logs[0]
+  .level = if exists(first_log.level) { string!(first_log.level) } else { "info" }
+  .message = if exists(first_log.message) { string!(first_log.message) } else { "" }
+  .browser_timestamp = if exists(first_log.timestamp) { timestamp!(first_log.timestamp) } else { now() }
+}
+
+# Add browser metadata
+.browser_url = if exists(.url) { string!(.url) } else { "" }
+.user_agent = if exists(.userAgent) { string!(.userAgent) } else { "" }
+'''
+
+# Format logs for console output
+[transforms.format_output]
+type = "remap"
+inputs = ["parse_logs", "parse_browser_logs"]
+source = '''
+# Format timestamp  
+ts = format_timestamp!(.timestamp, format: "%H:%M:%S%.3f")
+
+# Format level indicator
+level = string(.level) ?? "info"
+level_symbol = if contains(level, "error") {
+  "❌"
+} else if contains(level, "warn") {
+  "⚠️ "
+} else if contains(level, "debug") {
+  "🔍"
+} else {
+  "  "
+}
+
+# Build formatted message
+source = if exists(.source) { string!(.source) } else { "[UNKNOWN]" }
+message = if exists(.message) { string!(.message) } else { "" }
+.formatted = ts + " " + source + " " + level_symbol + " " + message
+'''
+
+# Route all logs to console
+[sinks.console]
+type = "console"
+inputs = ["format_output"]
+encoding.codec = "text"
+encoding.only_fields = ["formatted"]
+
+# Also save logs to file for persistence
+[sinks.file]
+type = "file"
+inputs = ["parse_logs", "parse_browser_logs"]
+path = "./logs/personakit-%Y-%m-%d.log"
+encoding.codec = "json"
+
+
+# Vector's built-in GraphQL API for querying logs
+[api]
+enabled = true
+address = "0.0.0.0:8686"
+playground = true

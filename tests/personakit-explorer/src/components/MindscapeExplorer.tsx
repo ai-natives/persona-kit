@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, ChevronDown, Clock, BarChart, Info } from 'lucide-react';
+import { ChevronRight, ChevronDown, Clock, BarChart, Info, MessageSquare, User, Calendar } from 'lucide-react';
 import { personaKitAPI } from '../api/personakit';
 
 interface TraitNodeProps {
@@ -163,18 +163,83 @@ export const MindscapeExplorer: React.FC<{ personId: string }> = ({ personId }) 
               <TraitTimeline personId={personId} traitName={selectedTrait} />
 
               <div className="contributing-observations">
-                <h3>Recent Observations</h3>
-                {observations?.slice(0, 5).map(obs => (
-                  <div key={obs.id} className="observation-item">
-                    <span className="obs-type">{obs.type}</span>
-                    <span className="obs-time">{new Date(obs.created_at).toLocaleString()}</span>
-                  </div>
+                <h3>
+                  <Info size={16} />
+                  Contributing Observations
+                </h3>
+                {observations?.filter(obs => {
+                  // Filter observations that might relate to this trait
+                  const traitCategory = selectedTrait.split('.')[0];
+                  return JSON.stringify(obs.content).toLowerCase().includes(traitCategory);
+                }).slice(0, 5).map(obs => (
+                  <ObservationCard key={obs.id} observation={obs} />
                 ))}
+                {observations?.filter(obs => {
+                  const traitCategory = selectedTrait.split('.')[0];
+                  return JSON.stringify(obs.content).toLowerCase().includes(traitCategory);
+                }).length === 0 && (
+                  <p className="no-observations">No direct observations for this trait yet</p>
+                )}
               </div>
             </>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ObservationCard({ observation }: { observation: any }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  const getObservationIcon = (type: string) => {
+    switch(type) {
+      case 'work_session':
+        return <Clock size={14} />;
+      case 'user_input':
+        return <MessageSquare size={14} />;
+      case 'calendar_event':
+        return <Calendar size={14} />;
+      default:
+        return <Info size={14} />;
+    }
+  };
+
+  const getObservationSummary = (obs: any) => {
+    if (obs.type === 'work_session' && obs.content.activity === 'coaching_session') {
+      return `Coaching: ${obs.content.topic}`;
+    } else if (obs.type === 'user_input' && obs.content.type === 'question') {
+      return `Question: "${obs.content.text}"`;
+    } else if (obs.type === 'user_input' && obs.content.type === 'self_reflection') {
+      return `Reflection: "${obs.content.text}"`;
+    } else if (obs.type === 'work_session' && obs.content.achievement) {
+      return `Achievement: ${obs.content.achievement}`;
+    }
+    return `${obs.type}: ${JSON.stringify(obs.content).substring(0, 50)}...`;
+  };
+
+  return (
+    <div className="observation-card" onClick={() => setExpanded(!expanded)}>
+      <div className="observation-header">
+        <div className="obs-type-icon">
+          {getObservationIcon(observation.type)}
+          <span>{getObservationSummary(observation)}</span>
+        </div>
+        <span className="obs-time">{new Date(observation.created_at).toLocaleDateString()}</span>
+      </div>
+      {expanded && (
+        <div className="observation-details">
+          {observation.content.notes && (
+            <p className="obs-notes">{observation.content.notes}</p>
+          )}
+          {observation.content.questions_asked && (
+            <p className="obs-questions">Questions: {observation.content.questions_asked}</p>
+          )}
+          {observation.content.breakthrough && (
+            <p className="obs-breakthrough">💡 {observation.content.breakthrough}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

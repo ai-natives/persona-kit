@@ -35,6 +35,7 @@ class MockDataGenerator:
             "work_sessions": 0,
             "calendar_events": 0,
             "user_inputs": 0,
+            "narratives": 0,
             "total": 0,
         }
 
@@ -72,6 +73,12 @@ class MockDataGenerator:
                 if random.random() < 0.3:  # 30% chance
                     await self._generate_user_input(person_id, current_date)
                     stats["user_inputs"] += 1
+
+                # Generate narratives
+                narratives = await self._generate_narratives(
+                    person_id, current_date
+                )
+                stats["narratives"] += narratives
 
                 progress.advance(task)
 
@@ -249,6 +256,98 @@ class MockDataGenerator:
             meta={"source": "mock_data_generator"},
         )
 
+    async def _generate_narratives(
+        self, person_id: UUID, date: datetime
+    ) -> int:
+        """Generate narrative observations for a day."""
+        count = 0
+        
+        # Self-observation narratives (40% chance per day)
+        if random.random() < 0.4:
+            # Morning reflection
+            if random.random() < 0.5:
+                observations = [
+                    "Started the day feeling energized after a good night's sleep. Ready to tackle the complex refactoring task.",
+                    "Feeling a bit foggy this morning. Need extra coffee before diving into the code review.",
+                    "Noticed I'm most focused in the first two hours. Should schedule important work then.",
+                    "The open office is particularly noisy today. Switching to noise-cancelling headphones.",
+                    "Really enjoying the new standing desk setup. Helps me stay alert during long coding sessions.",
+                ]
+                
+                await self.client.create_self_observation(
+                    person_id=person_id,
+                    text=random.choice(observations),
+                    tags=["morning", "reflection", "mock"],
+                    context={
+                        "source": "mock_data_generator",
+                        "time_of_day": "morning",
+                        "date": date.isoformat(),
+                    },
+                )
+                count += 1
+            
+            # Afternoon observation
+            if random.random() < 0.5:
+                observations = [
+                    "Post-lunch energy dip hit hard today. Taking a short walk helped reset my focus.",
+                    "Back-to-back meetings really fragmented my afternoon. Need better calendar blocking.",
+                    "Found my flow state while working on the API integration. Time just flew by.",
+                    "Pair programming session was incredibly productive. We solved the bug in half the expected time.",
+                    "Switching between contexts is exhausting. Need to batch similar tasks together.",
+                ]
+                
+                await self.client.create_self_observation(
+                    person_id=person_id,
+                    text=random.choice(observations),
+                    tags=["afternoon", "productivity", "mock"],
+                    context={
+                        "source": "mock_data_generator",
+                        "time_of_day": "afternoon",
+                        "date": date.isoformat(),
+                    },
+                )
+                count += 1
+        
+        # Curation narratives (20% chance per day)
+        if random.random() < 0.2:
+            curations = [
+                {
+                    "trait_path": "work_patterns.peak_hours",
+                    "text": "My peak hours seem to be shifting earlier. I'm most productive from 8-11 AM now.",
+                    "tags": ["schedule", "productivity"],
+                },
+                {
+                    "trait_path": "work_preferences.interruption_sensitivity",
+                    "text": "Slack notifications are my biggest productivity killer. Need to set better boundaries.",
+                    "tags": ["focus", "interruptions"],
+                },
+                {
+                    "trait_path": "energy_patterns.post_meeting_impact",
+                    "text": "Video calls drain my energy more than in-person meetings. Need recovery time after.",
+                    "tags": ["energy", "meetings"],
+                },
+                {
+                    "trait_path": "work_patterns.focus_duration",
+                    "text": "Can maintain deep focus for about 90 minutes before needing a real break.",
+                    "tags": ["focus", "time-management"],
+                },
+            ]
+            
+            curation = random.choice(curations)
+            await self.client.create_curation(
+                person_id=person_id,
+                trait_path=curation["trait_path"],
+                text=curation["text"],
+                tags=curation["tags"] + ["mock"],
+                context={
+                    "source": "mock_data_generator",
+                    "date": date.isoformat(),
+                },
+            )
+            count += 1
+        
+        return count
+
     def _get_productivity_score(self, time_of_day: str) -> int:
         """Get realistic productivity score based on time of day."""
         if time_of_day == "morning":
@@ -267,6 +366,7 @@ class MockDataGenerator:
         console.print(f"  Work sessions:    {stats['work_sessions']}")
         console.print(f"  Calendar events:  {stats['calendar_events']}")
         console.print(f"  User inputs:      {stats['user_inputs']}")
+        console.print(f"  Narratives:       {stats['narratives']}")
         console.print(f"  [bold]Total:[/bold]            {stats['total']}")
         console.print(
             "\n[dim]The background worker will process these observations shortly.[/dim]"

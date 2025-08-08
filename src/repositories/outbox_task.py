@@ -44,7 +44,7 @@ class OutboxTaskRepository(BaseRepository[OutboxTask]):
             select(OutboxTask)
             .where(
                 and_(
-                    OutboxTask.status == TaskStatus.PENDING,
+                    OutboxTask.status == TaskStatus.PENDING.value,
                     OutboxTask.run_after <= datetime.now(UTC),
                 )
             )
@@ -58,7 +58,7 @@ class OutboxTaskRepository(BaseRepository[OutboxTask]):
 
         if task:
             # Mark as in progress
-            task.status = TaskStatus.IN_PROGRESS
+            task.status = TaskStatus.IN_PROGRESS.value
             task.updated_at = datetime.now(UTC)
             await self.session.commit()
             await self.session.refresh(task)
@@ -75,7 +75,7 @@ class OutboxTaskRepository(BaseRepository[OutboxTask]):
             update(OutboxTask)
             .where(OutboxTask.task_id == task_id)
             .values(
-                status=TaskStatus.DONE,
+                status=TaskStatus.DONE.value,
                 completed_at=datetime.now(UTC),
                 updated_at=datetime.now(UTC),
             )
@@ -97,10 +97,10 @@ class OutboxTaskRepository(BaseRepository[OutboxTask]):
 
         # If we haven't exceeded max attempts and retry_after is set, reset to pending
         if task.attempts < 3 and retry_after:
-            task.status = TaskStatus.PENDING
+            task.status = TaskStatus.PENDING.value
             task.run_after = retry_after
         else:
-            task.status = TaskStatus.FAILED
+            task.status = TaskStatus.FAILED.value
 
         await self.session.commit()
 
@@ -115,7 +115,7 @@ class OutboxTaskRepository(BaseRepository[OutboxTask]):
             select(OutboxTask)
             .where(
                 and_(
-                    OutboxTask.status.in_([TaskStatus.DONE, TaskStatus.FAILED]),
+                    OutboxTask.status.in_([TaskStatus.DONE.value, TaskStatus.FAILED.value]),
                     OutboxTask.updated_at < cutoff_date,
                 )
             )
@@ -132,6 +132,6 @@ class OutboxTaskRepository(BaseRepository[OutboxTask]):
 
     async def get_pending_count(self) -> int:
         """Get count of pending tasks."""
-        stmt = select(OutboxTask).where(OutboxTask.status == TaskStatus.PENDING)
+        stmt = select(OutboxTask).where(OutboxTask.status == TaskStatus.PENDING.value)
         result = await self.session.execute(stmt)
         return len(result.scalars().all())

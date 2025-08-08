@@ -10,7 +10,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import feedback_router, health_router, observation_router, persona_router, mapper_router
+from .api import feedback_router, health_router, narrative_router, observation_router, persona_router, mapper_router
 from .config import settings
 from .database import async_session_maker, engine
 from .logging_config import setup_logging
@@ -92,6 +92,7 @@ app.include_router(observation_router, prefix="/observations", tags=["observatio
 app.include_router(persona_router, prefix="/personas", tags=["personas"])
 app.include_router(feedback_router, prefix="/feedback", tags=["feedback"])
 app.include_router(mapper_router, prefix="/mappers", tags=["mappers"])
+app.include_router(narrative_router, prefix="/api/narratives", tags=["narratives"])
 
 
 def main() -> None:

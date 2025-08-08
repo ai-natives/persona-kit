@@ -55,10 +55,72 @@ htmlcov/
 logs/
 *.log
 
+# Vector
+vector-data/
+
 # Docker
 docker-compose.override.yml
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # PersonaKit specific
 /data/
 /tmp/
 persona-suggestions/
+
+# Temporary and test files
+DELETE_ME*
+*_DELETE_ME*
+narrative_verification_report.md
+test_summary.py
+test_persona_api.py
+seed_demo_data.py
+run_real_tests.sh
+start-demo.sh
+test_person_ids.json
+
+# PID files
+*.pid
+
+# Lock files (keep uv.lock as it's Python's dependency lock)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# PersonaKit Explorer generated files
+tests/personakit-explorer/explorer.pid
+tests/personakit-explorer/explorer.log
+tests/personakit-explorer/start-explorer.sh
+tests/personakit-explorer/stop-explorer.sh
+
+# Mock servers and test setup
+persona-kit-workbench/mock_api_server.py
+scripts/quick_test_setup.py
+scripts/setup_test_data.py
+scripts/setup_test_data_direct.py
+
+# Documentation archives
+docs/_archive/
+docs/architecture-notes/
+
+# Lock files (keep uv.lock as it's Python's dependency lock)
+
+# Additional log patterns
+personakit_*.log
+explorer.log
+
+# Benchmark results
+tests/benchmarks/
+
+# Example app build artifacts
+examples/*/node_modules/
+examples/*/dist/
+examples/*/build/
+examples/*/.next/
+examples/*/.nuxt/
+examples/*/coverage/

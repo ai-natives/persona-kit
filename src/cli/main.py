@@ -44,6 +44,7 @@ def main() -> None:
         help="Output raw JSON response"
     )
 
+
     # Parse arguments
     args = parser.parse_args()
 
@@ -65,7 +66,6 @@ def main() -> None:
             sys.argv.append("--verbose")
         if args.json:
             sys.argv.append("--json")
-
         suggest_main()
 
 

@@ -23,9 +23,10 @@ logger = logging.getLogger(__name__)
 class PersonaGenerator:
     """Generates personas using configuration-driven mappers."""
     
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, narrative_service=None):
         self.db = db
-        self.rule_engine = RuleEngine()
+        self.narrative_service = narrative_service
+        self.rule_engine = RuleEngine(narrative_service)
     
     async def generate_persona(
         self,
@@ -69,7 +70,7 @@ class PersonaGenerator:
         self._validate_required_traits(mindscape, config.get("required_traits", []))
         
         # Evaluate rules to generate suggestions
-        suggestions = self.rule_engine.evaluate_rules(config, mindscape, context)
+        suggestions = await self.rule_engine.evaluate_rules(config, mindscape, context, person_id)
         
         # Build persona core (low-volatility traits)
         persona_core = self._build_persona_core(mindscape, config)
@@ -93,11 +94,12 @@ class PersonaGenerator:
             core=persona_core,
             overlay=contextual_overlay,
             expires_at=datetime.utcnow() + timedelta(hours=ttl_hours),
-            metadata={
+            meta={
                 "generated_at": datetime.utcnow().isoformat(),
                 "rule_count": len(config.get("rules", [])),
                 "suggestion_count": len(suggestions),
-                "context": context or {}
+                "context": context or {},
+                "narrative_usage": []  # Will be populated after save
             }
         )
         
@@ -107,6 +109,12 @@ class PersonaGenerator:
         mapper_config.usage_count += 1
         mapper_config.last_used_at = datetime.utcnow()
         self.db.add(mapper_config)
+        
+        # Collect narrative usage from rule evaluations
+        # This is stored in the rule_engine._last_matched_narratives
+        persona._narrative_usage = []
+        if hasattr(self.rule_engine, '_last_matched_narratives'):
+            persona._narrative_usage = self.rule_engine._last_matched_narratives
         
         return persona
     

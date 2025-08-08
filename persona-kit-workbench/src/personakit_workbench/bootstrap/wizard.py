@@ -42,6 +42,8 @@ class BootstrapWizard:
         await self._ask_productivity_time()
         await self._ask_focus_duration()
         await self._ask_flow_disruptors()
+        await self._ask_work_style_narrative()
+        await self._ask_productivity_narrative()
 
         # Show summary
         self._show_summary()
@@ -157,6 +159,44 @@ class BootstrapWizard:
 
         console.print()
 
+    async def _ask_work_style_narrative(self) -> None:
+        """Ask for a narrative about work style."""
+        console.print("[bold]5. Work Style (optional)[/bold]")
+        console.print(
+            "Tell us a bit about your ideal work environment or habits.\n"
+            "[dim]Example: I work best with noise-cancelling headphones and "
+            "prefer to tackle complex tasks before lunch.[/dim]"
+        )
+        
+        narrative = Prompt.ask(
+            "Your work style",
+            default="",
+        )
+        
+        if narrative.strip():
+            self.responses["work_style_narrative"] = narrative
+        
+        console.print()
+
+    async def _ask_productivity_narrative(self) -> None:
+        """Ask for a narrative about productivity patterns."""
+        console.print("[bold]6. Productivity Patterns (optional)[/bold]")
+        console.print(
+            "Have you noticed any patterns in your productivity?\n"
+            "[dim]Example: I tend to lose focus after video calls, or "
+            "I'm most creative after a short walk.[/dim]"
+        )
+        
+        narrative = Prompt.ask(
+            "Your productivity patterns",
+            default="",
+        )
+        
+        if narrative.strip():
+            self.responses["productivity_narrative"] = narrative
+        
+        console.print()
+
     def _show_summary(self) -> None:
         """Show summary of responses."""
         console.print("\n[bold]Summary of your work patterns:[/bold]\n")
@@ -173,6 +213,19 @@ class BootstrapWizard:
         table.add_row("Most productive:", self.responses["most_productive"])
         table.add_row("Focus duration:", self.responses["focus_duration"])
         table.add_row("Main disruptor:", self.responses["flow_disruptor"])
+        
+        # Add narrative summaries if provided
+        if self.responses.get("work_style_narrative"):
+            narrative = self.responses["work_style_narrative"]
+            if len(narrative) > 50:
+                narrative = narrative[:47] + "..."
+            table.add_row("Work style:", narrative)
+        
+        if self.responses.get("productivity_narrative"):
+            narrative = self.responses["productivity_narrative"]
+            if len(narrative) > 50:
+                narrative = narrative[:47] + "..."
+            table.add_row("Productivity:", narrative)
 
         console.print(table)
 
@@ -234,6 +287,29 @@ class BootstrapWizard:
                 "note": "Initial session for immediate persona generation",
             },
         )
+        
+        # Create narrative observations if provided
+        if self.responses.get("work_style_narrative"):
+            await self.client.create_self_observation(
+                person_id=self.person_id,
+                text=self.responses["work_style_narrative"],
+                tags=["work-style", "bootstrap"],
+                context={
+                    "source": "bootstrap_wizard",
+                    "prompt": "ideal work environment or habits",
+                },
+            )
+        
+        if self.responses.get("productivity_narrative"):
+            await self.client.create_self_observation(
+                person_id=self.person_id,
+                text=self.responses["productivity_narrative"],
+                tags=["productivity", "patterns", "bootstrap"],
+                context={
+                    "source": "bootstrap_wizard",
+                    "prompt": "productivity patterns",
+                },
+            )
 
     def _parse_time(self, time_str: str) -> time:
         """Parse time string to time object."""

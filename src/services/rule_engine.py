@@ -6,11 +6,15 @@ mapper rules and generating suggestions based on mindscape traits.
 """
 
 import logging
+import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from ..models.mindscape import Mindscape
+
+if TYPE_CHECKING:
+    from ..services.narrative_service import NarrativeService
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +22,21 @@ logger = logging.getLogger(__name__)
 class RuleEngine:
     """Evaluates mapper configuration rules against mindscape data."""
     
-    def evaluate_rules(
+    def __init__(self, narrative_service: Optional["NarrativeService"] = None):
+        """Initialize rule engine.
+        
+        Args:
+            narrative_service: Optional narrative service for narrative checks
+        """
+        self.narrative_service = narrative_service
+        self._narrative_cache: Dict[str, List[Dict[str, Any]]] = {}
+    
+    async def evaluate_rules(
         self,
         config: Dict[str, Any],
         mindscape: Mindscape,
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
+        person_id: Optional[Any] = None
     ) -> List[Dict[str, Any]]:
         """
         Evaluate all rules in a mapper configuration.
@@ -31,6 +45,7 @@ class RuleEngine:
             config: Mapper configuration dictionary
             mindscape: Mindscape containing traits
             context: Optional context (time of day, etc.)
+            person_id: Optional person ID for narrative checks
             
         Returns:
             List of generated suggestions
@@ -43,7 +58,7 @@ class RuleEngine:
         
         for rule in config.get("rules", []):
             try:
-                if self._evaluate_conditions(rule["conditions"], traits, context):
+                if await self._evaluate_conditions(rule["conditions"], traits, context, person_id):
                     # Apply weight to determine if we should generate suggestion
                     weight = rule.get("weight", 1.0)
                     if weight > 0:  # Only generate if weight is positive
@@ -58,17 +73,23 @@ class RuleEngine:
                                 if suggestion:
                                     suggestion["rule_id"] = rule["id"]
                                     suggestion["weight"] = weight
+                                    
+                                    # Add narrative context if available
+                                    if hasattr(self, '_last_matched_narratives'):
+                                        suggestion["narrative_context"] = self._last_matched_narratives
+                                        
                                     suggestions.append(suggestion)
             except Exception as e:
                 logger.error(f"Error evaluating rule {rule.get('id')}: {e}")
                 
         return suggestions
     
-    def _evaluate_conditions(
+    async def _evaluate_conditions(
         self,
         conditions: Dict[str, Any],
         traits: Dict[str, Any],
-        context: Dict[str, Any]
+        context: Dict[str, Any],
+        person_id: Optional[Any] = None
     ) -> bool:
         """Evaluate rule conditions."""
         condition_type = conditions.get("type", "single")
@@ -81,21 +102,24 @@ class RuleEngine:
                 return self._evaluate_time_check(conditions["time_check"], context)
             elif "context_check" in conditions:
                 return self._evaluate_context_check(conditions["context_check"], context)
+            elif "narrative_check" in conditions and person_id:
+                return await self._evaluate_narrative_check(conditions["narrative_check"], person_id)
             return False
             
         elif condition_type == "all":
             # All conditions must be true
-            return all(
-                self._evaluate_conditions(cond, traits, context)
-                for cond in conditions.get("conditions", [])
-            )
+            results = []
+            for cond in conditions.get("conditions", []):
+                result = await self._evaluate_conditions(cond, traits, context, person_id)
+                results.append(result)
+            return all(results)
             
         elif condition_type == "any":
             # Any condition must be true
-            return any(
-                self._evaluate_conditions(cond, traits, context)
-                for cond in conditions.get("conditions", [])
-            )
+            for cond in conditions.get("conditions", []):
+                if await self._evaluate_conditions(cond, traits, context, person_id):
+                    return True
+            return False
             
         return False
     
@@ -353,6 +377,74 @@ class RuleEngine:
             if placeholder in result:
                 result = result.replace(placeholder, str(value))
         return result
+    
+    async def _evaluate_narrative_check(
+        self,
+        check: Dict[str, Any],
+        person_id: Any
+    ) -> bool:
+        """Evaluate a narrative-based condition using semantic search.
+        
+        Args:
+            check: Narrative check configuration with:
+                - query: Semantic search query
+                - threshold: Similarity threshold (0-1)
+                - limit: Max narratives to check
+            person_id: Person ID to search narratives for
+            
+        Returns:
+            True if matching narratives found above threshold
+        """
+        # Check cache first
+        cache_key = f"{person_id}:{check.get('query', '')}"
+        if cache_key in self._narrative_cache:
+            narratives = self._narrative_cache[cache_key]
+        else:
+            if self.narrative_service:
+                # Real implementation - use the narrative service
+                from ..schemas.narrative import NarrativeSearchRequest
+                
+                search_request = NarrativeSearchRequest(
+                    person_id=person_id,
+                    query=check.get("query", ""),
+                    min_similarity=check.get("threshold", 0.7),
+                    limit=check.get("limit", 5),
+                    narrative_types=check.get("narrative_types")
+                )
+                
+                try:
+                    # Now we can naturally await the async call
+                    search_results = await self.narrative_service.semantic_search(search_request)
+                    
+                    # Convert to simple dicts for caching
+                    narratives = [
+                        {
+                            "id": str(n.narrative.id),
+                            "text": n.narrative.raw_text,
+                            "score": n.similarity_score,
+                            "type": n.narrative.narrative_type
+                        }
+                        for n in search_results
+                    ]
+                    
+                except Exception as e:
+                    logger.error(f"Failed to search narratives: {e}")
+                    narratives = []
+                    
+            else:
+                # No narrative service available
+                logger.warning("No narrative service available for narrative check")
+                narratives = []
+            
+            # Cache the results
+            self._narrative_cache[cache_key] = narratives
+        
+        # Store matched narratives for context
+        if narratives:
+            self._last_matched_narratives = narratives[:3]  # Keep top 3 for context
+            
+        # Return true if we found matching narratives
+        return len(narratives) > 0
 
 
 class ConfigurationValidator:

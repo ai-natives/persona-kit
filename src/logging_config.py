@@ -1,6 +1,7 @@
 """Logging configuration for PersonaKit."""
 import json
 import logging
+import os
 import sys
 from datetime import UTC, datetime
 from typing import Any
@@ -44,20 +45,35 @@ def setup_logging() -> None:
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
 
-    # Create console handler
+    # Create handlers
+    handlers = []
+    
+    # Always add console handler
     console_handler = logging.StreamHandler(sys.stdout)
+    handlers.append(console_handler)
+    
+    # Add file handler if LOG_FILE env var is set
+    log_file = os.getenv("LOG_FILE")
+    if log_file:
+        # Ensure directory exists
+        log_dir = os.path.dirname(log_file)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+        file_handler = logging.FileHandler(log_file)
+        handlers.append(file_handler)
 
     # Set formatter based on environment
     if settings.log_format == "json":
-        console_handler.setFormatter(JSONFormatter())
+        formatter = JSONFormatter()
     else:
-        console_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
-
-    root_logger.addHandler(console_handler)
+    
+    # Apply formatter to all handlers
+    for handler in handlers:
+        handler.setFormatter(formatter)
+        root_logger.addHandler(handler)
 
     # Set specific log levels for noisy libraries
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)

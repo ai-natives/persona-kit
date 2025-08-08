@@ -1,0 +1,64 @@
+# Simplified Vector configuration for PersonaKit development
+
+sources:
+  # Frontend apps send logs here
+  browser_logs:
+    type: http_server
+    address: "127.0.0.1:8105"
+    encoding:
+      codec: json
+
+  # Backend services write to these files
+  backend_logs:
+    type: file
+    include:
+      - "/tmp/personakit-logs/*.log"
+    read_from: beginning
+    fingerprint:
+      strategy: device_and_inode
+
+transforms:
+  # Add source info to backend logs
+  enrich_logs:
+    type: remap
+    inputs: [backend_logs]
+    source: |
+      # Extract service name from filename
+      .service = replace(file_name(.file), r'\.log$', '')
+      # Try to parse JSON if the line is JSON
+      parsed = parse_json(.message) ?? null
+      if parsed != null {
+        . = merge(., parsed)
+      }
+
+  # Format all logs consistently
+  format_all:
+    type: remap
+    inputs: [browser_logs, enrich_logs]
+    source: |
+      # Ensure we have required fields
+      .timestamp = .timestamp ?? now()
+      .level = downcase(string!(.level ?? "info"))
+      .service = .service ?? .source ?? "unknown"
+      
+      # Add color coding
+      .color = if .level == "error" { "red" }
+        else if .level == "warn" { "yellow" }
+        else if .level == "debug" { "blue" }
+        else { "green" }
+
+sinks:
+  # Output to console with nice formatting
+  console:
+    type: console
+    inputs: [format_all]
+    encoding:
+      codec: json
+
+  # Also save to daily files
+  archive:
+    type: file
+    inputs: [format_all]
+    path: "./logs/personakit-%Y-%m-%d.log"
+    encoding:
+      codec: json

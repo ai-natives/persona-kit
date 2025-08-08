@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-pk-bg text-pk-text;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-pk-bg;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-pk-border rounded;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-pk-muted;
+  }
+}
+
+@layer components {
+  .metric-card {
+    @apply bg-pk-surface border border-pk-border rounded-lg p-4;
+  }
+  
+  .activity-item {
+    @apply border-b border-pk-border last:border-0 py-3;
+  }
+  
+  .log-entry {
+    @apply font-mono text-sm py-2 border-b border-pk-border hover:bg-pk-surface/50 transition-colors;
+  }
+}

@@ -9,8 +9,8 @@ import json
 import yaml
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_, func, select
 from pydantic import BaseModel, Field
 from datetime import datetime
 import uuid
@@ -18,7 +18,6 @@ import uuid
 from ..database import get_db
 from ..models.mapper_config import MapperConfig, MapperStatus
 from ..services.rule_engine import ConfigurationValidator
-from .auth import get_current_user
 
 router = APIRouter(prefix="/mappers", tags=["mappers"])
 
@@ -57,11 +56,10 @@ class MapperUpdateRequest(BaseModel):
 
 @router.get("", response_model=MapperListResponse)
 async def list_mappers(
+    db: AsyncSession = Depends(get_db),
     status: Optional[str] = None,
     skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    limit: int = 100
 ) -> MapperListResponse:
     """
     List available mapper configurations.
@@ -71,34 +69,33 @@ async def list_mappers(
         skip: Number of records to skip
         limit: Maximum number of records to return
     """
-    query = db.query(MapperConfig)
+    # Build query
+    query = select(MapperConfig)
     
     if status:
         try:
             status_enum = MapperStatus(status)
-            query = query.filter(MapperConfig.status == status_enum)
+            query = query.where(MapperConfig.status == status_enum)
         except ValueError:
             raise HTTPException(400, f"Invalid status: {status}")
     
-    # Get latest version of each config_id using a subquery
-    
-    # Subquery to get max version for each config_id
-    subquery = db.query(
+    # Get latest version of each config_id using a window function
+    # This is simpler with async queries
+    query = query.order_by(
         MapperConfig.config_id,
-        func.max(MapperConfig.version).label("max_version")
-    ).group_by(MapperConfig.config_id).subquery()
-    
-    # Join with main table to get full records
-    query = query.join(
-        subquery,
-        and_(
-            MapperConfig.config_id == subquery.c.config_id,
-            MapperConfig.version == subquery.c.max_version
-        )
+        MapperConfig.version.desc()
     )
     
-    mappers = query.offset(skip).limit(limit).all()
-    unique_mappers = [mapper.to_dict() for mapper in mappers]
+    result = await db.execute(query.offset(skip).limit(limit))
+    all_mappers = result.scalars().all()
+    
+    # Filter to only latest versions
+    seen_configs = set()
+    unique_mappers = []
+    for mapper in all_mappers:
+        if mapper.config_id not in seen_configs:
+            seen_configs.add(mapper.config_id)
+            unique_mappers.append(mapper.to_dict())
     
     return MapperListResponse(
         mappers=unique_mappers,
@@ -109,9 +106,8 @@ async def list_mappers(
 @router.get("/{mapper_id}", response_model=MapperDetailResponse)
 async def get_mapper(
     mapper_id: str,
-    version: Optional[int] = None,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db),
+    version: Optional[int] = None
 ) -> MapperDetailResponse:
     """
     Get a specific mapper configuration.
@@ -145,8 +141,7 @@ async def get_mapper(
 @router.post("", response_model=MapperDetailResponse)
 async def create_mapper(
     request: MapperCreateRequest,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ) -> MapperDetailResponse:
     """Create a new mapper configuration."""
     # Validate configuration
@@ -171,7 +166,7 @@ async def create_mapper(
         version=1,
         configuration=request.configuration,
         status=MapperStatus(request.status),
-        created_by=current_user.get("username", "system")
+        created_by="system"
     )
     
     db.add(mapper)
@@ -183,10 +178,9 @@ async def create_mapper(
 
 @router.post("/upload", response_model=MapperDetailResponse)
 async def upload_mapper(
+    db: AsyncSession = Depends(get_db),
     file: UploadFile = File(...),
-    status: str = Form("draft"),
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    status: str = Form("draft")
 ) -> MapperDetailResponse:
     """
     Upload a mapper configuration from a YAML or JSON file.
@@ -238,7 +232,7 @@ async def upload_mapper(
         version=version,
         configuration=configuration,
         status=MapperStatus(status),
-        created_by=current_user.get("username", "system")
+        created_by="system"
     )
     
     db.add(mapper)
@@ -252,8 +246,7 @@ async def upload_mapper(
 async def update_mapper(
     mapper_id: str,
     request: MapperUpdateRequest,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ) -> MapperDetailResponse:
     """
     Update a mapper configuration (creates new version).
@@ -285,7 +278,7 @@ async def update_mapper(
         version=existing.version + 1,
         configuration=new_config,
         status=MapperStatus(request.status) if request.status else existing.status,
-        created_by=current_user.get("username", "system")
+        created_by="system"
     )
     
     # If new version is active, deprecate all previous active versions
@@ -305,8 +298,7 @@ async def update_mapper(
 @router.get("/{mapper_id}/versions")
 async def get_mapper_versions(
     mapper_id: str,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ) -> dict:
     """Get version history for a mapper configuration."""
     versions = db.query(MapperConfig).filter(
@@ -334,8 +326,7 @@ async def get_mapper_versions(
 @router.delete("/{mapper_id}")
 async def deprecate_mapper(
     mapper_id: str,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ) -> dict:
     """
     Deprecate a mapper configuration (soft delete).
